@@ -100,12 +100,15 @@ const ProjectPage = ({ params }: { params: Promise<{ projectid: string }> }) => 
                     onConnect={onConnect}
                     nodeTypes={nodeTypes}
                     fitView
+                    fitViewOptions={{
+                        padding: 100,
+                    }}
                     attributionPosition="bottom-left"
                 >
                     <Background
-                        color="#f3f4f6"
+                        color="#000000"
                         variant={BackgroundVariant.Dots}
-                        gap={10}
+                        gap={30}
                     />
                     <Controls />
                 </ReactFlow>
