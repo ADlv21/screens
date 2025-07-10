@@ -17,8 +17,14 @@ interface UnifiedWhiteboardProps {
     projectId?: string;
 }
 
+const MOBILE_WIDTH = 375;
+const MOBILE_HEIGHT = 812;
+const GRID_SIZE = 50; // px, grid square size on screen
+
 const UnifiedWhiteboard: React.FC<UnifiedWhiteboardProps> = ({ designs, projectId }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
+    const [canvasSize, setCanvasSize] = useState({ width: 1200, height: 800 });
     const [scale, setScale] = useState(1);
     const [offsetX, setOffsetX] = useState(0);
     const [offsetY, setOffsetY] = useState(0);
@@ -29,9 +35,20 @@ const UnifiedWhiteboard: React.FC<UnifiedWhiteboardProps> = ({ designs, projectI
     const [dragDesignKey, setDragDesignKey] = useState<string | null>(null);
     const [dragStartPos, setDragStartPos] = useState({ x: 0, y: 0 });
 
-    // Canvas dimensions
-    const canvasWidth = 2000;
-    const canvasHeight = 1500;
+    // Responsive canvas size
+    useEffect(() => {
+        function updateSize() {
+            if (containerRef.current) {
+                setCanvasSize({
+                    width: containerRef.current.offsetWidth,
+                    height: containerRef.current.offsetHeight,
+                });
+            }
+        }
+        updateSize();
+        window.addEventListener('resize', updateSize);
+        return () => window.removeEventListener('resize', updateSize);
+    }, []);
 
     // Initialize design positions in a grid layout
     const [designPositions, setDesignPositions] = useState<Map<string, { x: number; y: number }>>(() => {
@@ -40,8 +57,8 @@ const UnifiedWhiteboard: React.FC<UnifiedWhiteboardProps> = ({ designs, projectI
             const row = Math.floor(index / 2);
             const col = index % 2;
             positions.set(design.key, {
-                x: 100 + col * (design.width + 100),
-                y: 100 + row * (design.height + 100)
+                x: 100 + col * (MOBILE_WIDTH + 100),
+                y: 100 + row * (MOBILE_HEIGHT + 100)
             });
         });
         return positions;
@@ -78,8 +95,8 @@ const UnifiedWhiteboard: React.FC<UnifiedWhiteboardProps> = ({ designs, projectI
         for (const design of designs) {
             const pos = designPositions.get(design.key);
             if (pos &&
-                mouseX >= pos.x && mouseX <= pos.x + design.width &&
-                mouseY >= pos.y && mouseY <= pos.y + design.height) {
+                mouseX >= pos.x && mouseX <= pos.x + MOBILE_WIDTH &&
+                mouseY >= pos.y && mouseY <= pos.y + MOBILE_HEIGHT) {
                 setSelectedDesign(design.key);
                 setIsDraggingDesign(true);
                 setDragDesignKey(design.key);
@@ -132,75 +149,60 @@ const UnifiedWhiteboard: React.FC<UnifiedWhiteboardProps> = ({ designs, projectI
     const renderCanvas = useCallback(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
-
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
         // Clear canvas
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // Apply transformations
+        // Draw grid in screen space (grid squares always same size on screen)
+        ctx.save();
+        ctx.strokeStyle = '#e2e8f0';
+        ctx.lineWidth = 1;
+        // Calculate grid start based on pan/zoom
+        const startX = -((offsetX / scale) % GRID_SIZE) * scale;
+        const startY = -((offsetY / scale) % GRID_SIZE) * scale;
+        for (let x = startX; x < canvasSize.width; x += GRID_SIZE * scale) {
+            ctx.beginPath();
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, canvasSize.height);
+            ctx.stroke();
+        }
+        for (let y = startY; y < canvasSize.height; y += GRID_SIZE * scale) {
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(canvasSize.width, y);
+            ctx.stroke();
+        }
+        ctx.restore();
+
+        // Draw design placeholders (background only, in world space)
         ctx.save();
         ctx.translate(offsetX, offsetY);
         ctx.scale(scale, scale);
-
-        // Draw whiteboard background
-        ctx.fillStyle = '#f8fafc';
-        ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-
-        // Draw grid
-        ctx.strokeStyle = '#e2e8f0';
-        ctx.lineWidth = 1;
-        const gridSize = 50;
-
-        for (let x = 0; x <= canvasWidth; x += gridSize) {
-            ctx.beginPath();
-            ctx.moveTo(x, 0);
-            ctx.lineTo(x, canvasHeight);
-            ctx.stroke();
-        }
-
-        for (let y = 0; y <= canvasHeight; y += gridSize) {
-            ctx.beginPath();
-            ctx.moveTo(0, y);
-            ctx.lineTo(canvasWidth, y);
-            ctx.stroke();
-        }
-
-        // Draw design placeholders (background only)
         designs.forEach(design => {
             const pos = designPositions.get(design.key);
             if (!pos) return;
-
             const isSelected = selectedDesign === design.key;
-
-            // Draw background
             ctx.fillStyle = isSelected ? '#dbeafe' : '#ffffff';
-            ctx.fillRect(pos.x, pos.y, design.width, design.height);
-
-            // Draw border
+            ctx.fillRect(pos.x, pos.y, MOBILE_WIDTH, MOBILE_HEIGHT);
             ctx.strokeStyle = isSelected ? '#3b82f6' : '#d1d5db';
             ctx.lineWidth = isSelected ? 3 : 2;
-            ctx.strokeRect(pos.x, pos.y, design.width, design.height);
-
-            // Draw title
+            ctx.strokeRect(pos.x, pos.y, MOBILE_WIDTH, MOBILE_HEIGHT);
             ctx.fillStyle = '#374151';
             ctx.font = 'bold 16px Arial';
             ctx.textAlign = 'center';
-            ctx.fillText(design.name, pos.x + design.width / 2, pos.y + 25);
-
-            // Draw selection indicator
+            ctx.fillText(design.name, pos.x + MOBILE_WIDTH / 2, pos.y + 25);
             if (isSelected) {
                 ctx.strokeStyle = '#3b82f6';
                 ctx.lineWidth = 2;
                 ctx.setLineDash([5, 5]);
-                ctx.strokeRect(pos.x - 5, pos.y - 5, design.width + 10, design.height + 10);
+                ctx.strokeRect(pos.x - 5, pos.y - 5, MOBILE_WIDTH + 10, MOBILE_HEIGHT + 10);
                 ctx.setLineDash([]);
             }
         });
-
         ctx.restore();
-    }, [designs, designPositions, selectedDesign, offsetX, offsetY, scale]);
+    }, [designs, designPositions, selectedDesign, offsetX, offsetY, scale, canvasSize]);
 
     // Render canvas on changes
     useEffect(() => {
@@ -220,11 +222,11 @@ const UnifiedWhiteboard: React.FC<UnifiedWhiteboardProps> = ({ designs, projectI
             </div>
 
             {/* Canvas Container */}
-            <div className="flex-1 relative overflow-hidden">
+            <div ref={containerRef} className="flex-1 relative overflow-hidden">
                 <canvas
                     ref={canvasRef}
-                    width={canvasWidth}
-                    height={canvasHeight}
+                    width={canvasSize.width}
+                    height={canvasSize.height}
                     onWheel={handleWheel}
                     onMouseDown={handleMouseDown}
                     onMouseMove={handleMouseMove}
@@ -232,15 +234,15 @@ const UnifiedWhiteboard: React.FC<UnifiedWhiteboardProps> = ({ designs, projectI
                     onMouseLeave={handleMouseUp}
                     style={{
                         cursor: isDragging ? 'grabbing' : isDraggingDesign ? 'move' : 'grab',
-                        display: 'block'
+                        display: 'block',
+                        width: '100%',
+                        height: '100%'
                     }}
                 />
-
-                {/* Overlay iframes on top of canvas */}
+                {/* Overlay iframes on top of canvas, fixed size, only container is scaled */}
                 {designs.map(design => {
                     const pos = designPositions.get(design.key);
                     if (!pos) return null;
-
                     return (
                         <div
                             key={design.key}
@@ -248,25 +250,36 @@ const UnifiedWhiteboard: React.FC<UnifiedWhiteboardProps> = ({ designs, projectI
                                 position: 'absolute',
                                 top: offsetY + pos.y * scale,
                                 left: offsetX + pos.x * scale,
-                                width: design.width * scale,
-                                height: design.height * scale,
+                                width: MOBILE_WIDTH,
+                                height: MOBILE_HEIGHT,
+                                transform: `scale(${scale})`,
+                                transformOrigin: 'top left',
                                 pointerEvents: isDraggingDesign ? 'none' : 'auto',
-                                zIndex: selectedDesign === design.key ? 10 : 5
+                                zIndex: selectedDesign === design.key ? 10 : 5,
+                                boxShadow: selectedDesign === design.key
+                                    ? '0 0 0 3px #3b82f6'
+                                    : '0 4px 6px rgba(0, 0, 0, 0.1)',
+                                background: '#fff',
+                                borderRadius: '0.5rem',
+                                overflow: 'hidden',
                             }}
                         >
                             <iframe
                                 src={design.url}
+                                width={MOBILE_WIDTH}
+                                height={MOBILE_HEIGHT}
                                 style={{
-                                    width: '100%',
-                                    height: '100%',
+                                    width: MOBILE_WIDTH,
+                                    height: MOBILE_HEIGHT,
                                     border: 'none',
                                     borderRadius: '0.5rem',
-                                    boxShadow: selectedDesign === design.key
-                                        ? '0 0 0 3px #3b82f6'
-                                        : '0 4px 6px rgba(0, 0, 0, 0.1)',
-                                    backgroundColor: 'white'
+                                    backgroundColor: 'white',
+                                    pointerEvents: isDraggingDesign ? 'none' : 'auto',
+                                    display: 'block',
                                 }}
                                 allowFullScreen
+                                tabIndex={-1}
+                                sandbox="allow-scripts allow-same-origin allow-popups"
                             />
                         </div>
                     );
