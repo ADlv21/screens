@@ -83,8 +83,13 @@ const UnifiedWhiteboard: React.FC<UnifiedWhiteboardProps> = ({ designs, projectI
             setScale(newScale);
             return;
         }
-        // Normal wheel (vertical/horizontal scroll) can be handled here if you want to support scrolling/panning with two fingers
-        // For now, do nothing (no scroll)
+        // Pan the canvas with wheel/trackpad scroll
+        if (e.deltaY !== 0) {
+            setOffsetY(prev => prev - e.deltaY);
+        }
+        if (e.deltaX !== 0) {
+            setOffsetX(prev => prev - e.deltaX);
+        }
     }, [scale]);
 
     // Handle canvas pan
@@ -253,67 +258,73 @@ const UnifiedWhiteboard: React.FC<UnifiedWhiteboardProps> = ({ designs, projectI
                     const pos = designPositions.get(design.key);
                     if (!pos) return null;
                     return (
-                        <div
-                            key={design.key}
-                            style={{
-                                position: 'absolute',
-                                top: offsetY + pos.y * scale,
-                                left: offsetX + pos.x * scale,
-                                width: MOBILE_WIDTH,
-                                height: MOBILE_HEIGHT,
-                                transform: `scale(${scale})`,
-                                transformOrigin: 'top left',
-                                pointerEvents: isDraggingDesign ? 'none' : 'auto',
-                                zIndex: selectedDesign === design.key ? 10 : 5,
-                                boxShadow: selectedDesign === design.key
-                                    ? '0 0 0 3px #3b82f6'
-                                    : '0 4px 6px rgba(0, 0, 0, 0.1)',
-                                background: '#fff',
-                                borderRadius: '0.5rem',
-                                overflow: 'hidden',
-                                display: 'flex',
-                                flexDirection: 'column',
-                            }}
-                        >
-                            {/* Title inside the scaled container */}
+                        <React.Fragment key={design.key}>
+                            {/* Floating title above the box, not scaled */}
                             <div
                                 style={{
-                                    width: '100%',
+                                    position: 'absolute',
+                                    top: offsetY + pos.y * scale - (32 * scale), // Fix: scale the offset
+                                    left: offsetX + pos.x * scale,
+                                    width: MOBILE_WIDTH * scale,
                                     textAlign: 'center',
                                     fontWeight: 700,
-                                    fontSize: 20,
+                                    fontSize: 20 * scale,
                                     color: '#22223b',
-                                    background: 'rgba(255,255,255,0.95)',
-                                    padding: '8px 0 4px 0',
-                                    borderTopLeftRadius: '0.5rem',
-                                    borderTopRightRadius: '0.5rem',
+                                    pointerEvents: 'none',
                                     userSelect: 'none',
-                                    zIndex: 2,
+                                    zIndex: 20,
+                                    marginBottom: 16 * scale,
+                                    background: 'transparent',
+                                    lineHeight: 1.1,
+                                    letterSpacing: 0.5 * scale,
+                                    whiteSpace: 'nowrap',
                                 }}
                             >
                                 {design.name}
                             </div>
-                            {/* Iframe (fills the rest) */}
-                            <iframe
-                                src={design.url}
-                                width={MOBILE_WIDTH}
-                                height={MOBILE_HEIGHT}
+                            {/* Scaled container with iframe */}
+                            <div
                                 style={{
+                                    position: 'absolute',
+                                    top: offsetY + pos.y * scale,
+                                    left: offsetX + pos.x * scale,
                                     width: MOBILE_WIDTH,
                                     height: MOBILE_HEIGHT,
-                                    border: 'none',
-                                    borderRadius: '0 0 0.5rem 0.5rem',
-                                    backgroundColor: 'white',
+                                    transform: `scale(${scale})`,
+                                    transformOrigin: 'top left',
                                     pointerEvents: isDraggingDesign ? 'none' : 'auto',
-                                    display: 'block',
-                                    flex: 1,
-                                    marginTop: 0,
+                                    zIndex: selectedDesign === design.key ? 10 : 5,
+                                    boxShadow: selectedDesign === design.key
+                                        ? '0 0 0 3px #3b82f6'
+                                        : '0 4px 6px rgba(0, 0, 0, 0.1)',
+                                    background: '#fff',
+                                    borderRadius: '0.5rem',
+                                    overflow: 'hidden',
+                                    display: 'flex',
+                                    flexDirection: 'column',
                                 }}
-                                allowFullScreen
-                                tabIndex={-1}
-                                sandbox="allow-scripts allow-same-origin allow-popups"
-                            />
-                        </div>
+                            >
+                                <iframe
+                                    src={design.url}
+                                    width={MOBILE_WIDTH}
+                                    height={MOBILE_HEIGHT}
+                                    style={{
+                                        width: MOBILE_WIDTH,
+                                        height: MOBILE_HEIGHT,
+                                        border: 'none',
+                                        borderRadius: '0.5rem',
+                                        backgroundColor: 'white',
+                                        pointerEvents: isDraggingDesign ? 'none' : 'auto',
+                                        display: 'block',
+                                        flex: 1,
+                                        marginTop: 0,
+                                    }}
+                                    allowFullScreen
+                                    tabIndex={-1}
+                                    sandbox="allow-scripts allow-same-origin allow-popups"
+                                />
+                            </div>
+                        </React.Fragment>
                     );
                 })}
             </div>
