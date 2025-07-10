@@ -20,9 +20,6 @@ const ProjectPage = async ({ params }: { params: Promise<{ projectid: string }> 
         }
     })
 
-    console.log(`Loading project: ${projectid}`)
-    console.log(designs)
-
     return (
         <UnifiedWhiteboard designs={designs} />
     )
