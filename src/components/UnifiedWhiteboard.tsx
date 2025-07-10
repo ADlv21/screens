@@ -176,7 +176,7 @@ const UnifiedWhiteboard: React.FC<UnifiedWhiteboardProps> = ({ designs, projectI
         }
         ctx.restore();
 
-        // Draw design placeholders (background only, in world space)
+        // Draw design rectangles (background only, in world space)
         ctx.save();
         ctx.translate(offsetX, offsetY);
         ctx.scale(scale, scale);
@@ -189,10 +189,6 @@ const UnifiedWhiteboard: React.FC<UnifiedWhiteboardProps> = ({ designs, projectI
             ctx.strokeStyle = isSelected ? '#3b82f6' : '#d1d5db';
             ctx.lineWidth = isSelected ? 3 : 2;
             ctx.strokeRect(pos.x, pos.y, MOBILE_WIDTH, MOBILE_HEIGHT);
-            ctx.fillStyle = '#374151';
-            ctx.font = 'bold 16px Arial';
-            ctx.textAlign = 'center';
-            ctx.fillText(design.name, pos.x + MOBILE_WIDTH / 2, pos.y + 25);
             if (isSelected) {
                 ctx.strokeStyle = '#3b82f6';
                 ctx.lineWidth = 2;
@@ -211,8 +207,8 @@ const UnifiedWhiteboard: React.FC<UnifiedWhiteboardProps> = ({ designs, projectI
 
     return (
         <div className="flex flex-col h-screen bg-gray-100">
-            {/* Header */}
-            <div className="flex items-center justify-between p-4 bg-white shadow-sm">
+            {/* Header - always fixed, never zoomed */}
+            <div className="flex items-center justify-between p-4 bg-white shadow-sm" style={{ position: 'relative', zIndex: 100 }}>
                 <h1 className="text-2xl font-bold text-gray-800">
                     Unified Whiteboard Canvas
                     {projectId && (
@@ -221,12 +217,13 @@ const UnifiedWhiteboard: React.FC<UnifiedWhiteboardProps> = ({ designs, projectI
                 </h1>
             </div>
 
-            {/* Canvas Container */}
-            <div ref={containerRef} className="flex-1 relative overflow-hidden">
+            {/* Canvas Container - only this area is zoomed/panned */}
+            <div ref={containerRef} className="flex-1 relative overflow-hidden" style={{ position: 'relative', zIndex: 1 }}>
                 <canvas
                     ref={canvasRef}
                     width={canvasSize.width}
                     height={canvasSize.height}
+                    tabIndex={0}
                     onWheel={handleWheel}
                     onMouseDown={handleMouseDown}
                     onMouseMove={handleMouseMove}
@@ -236,10 +233,18 @@ const UnifiedWhiteboard: React.FC<UnifiedWhiteboardProps> = ({ designs, projectI
                         cursor: isDragging ? 'grabbing' : isDraggingDesign ? 'move' : 'grab',
                         display: 'block',
                         width: '100%',
-                        height: '100%'
+                        height: '100%',
+                        background: 'transparent',
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        zIndex: 2,
+                        outline: 'none',
                     }}
+                    onFocus={e => e.currentTarget.style.outline = '2px solid #3b82f6'}
+                    onBlur={e => e.currentTarget.style.outline = 'none'}
                 />
-                {/* Overlay iframes on top of canvas, fixed size, only container is scaled */}
+                {/* Overlay iframes and design titles on top of canvas, fixed size, only container is scaled */}
                 {designs.map(design => {
                     const pos = designPositions.get(design.key);
                     if (!pos) return null;
@@ -262,8 +267,29 @@ const UnifiedWhiteboard: React.FC<UnifiedWhiteboardProps> = ({ designs, projectI
                                 background: '#fff',
                                 borderRadius: '0.5rem',
                                 overflow: 'hidden',
+                                display: 'flex',
+                                flexDirection: 'column',
                             }}
                         >
+                            {/* Title inside the scaled container */}
+                            <div
+                                style={{
+                                    width: '100%',
+                                    textAlign: 'center',
+                                    fontWeight: 700,
+                                    fontSize: 20,
+                                    color: '#22223b',
+                                    background: 'rgba(255,255,255,0.95)',
+                                    padding: '8px 0 4px 0',
+                                    borderTopLeftRadius: '0.5rem',
+                                    borderTopRightRadius: '0.5rem',
+                                    userSelect: 'none',
+                                    zIndex: 2,
+                                }}
+                            >
+                                {design.name}
+                            </div>
+                            {/* Iframe (fills the rest) */}
                             <iframe
                                 src={design.url}
                                 width={MOBILE_WIDTH}
@@ -272,10 +298,12 @@ const UnifiedWhiteboard: React.FC<UnifiedWhiteboardProps> = ({ designs, projectI
                                     width: MOBILE_WIDTH,
                                     height: MOBILE_HEIGHT,
                                     border: 'none',
-                                    borderRadius: '0.5rem',
+                                    borderRadius: '0 0 0.5rem 0.5rem',
                                     backgroundColor: 'white',
                                     pointerEvents: isDraggingDesign ? 'none' : 'auto',
                                     display: 'block',
+                                    flex: 1,
+                                    marginTop: 0,
                                 }}
                                 allowFullScreen
                                 tabIndex={-1}
