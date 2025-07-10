@@ -64,23 +64,27 @@ const UnifiedWhiteboard: React.FC<UnifiedWhiteboardProps> = ({ designs, projectI
         return positions;
     });
 
-    // Handle canvas zoom with mouse wheel
+    // Handle canvas zoom with mouse wheel and pinch-to-zoom
     const handleWheel = useCallback((e: React.WheelEvent) => {
+        // Always prevent default to block browser zoom
         e.preventDefault();
-        const delta = e.deltaY > 0 ? 0.9 : 1.1;
-        const newScale = Math.max(0.1, Math.min(5, scale * delta));
-
-        // Zoom towards mouse position
-        const rect = canvasRef.current?.getBoundingClientRect();
-        if (rect) {
-            const mouseX = e.clientX - rect.left;
-            const mouseY = e.clientY - rect.top;
-
-            setOffsetX(prev => mouseX - (mouseX - prev) * (newScale / scale));
-            setOffsetY(prev => mouseY - (mouseY - prev) * (newScale / scale));
+        // Pinch-to-zoom on trackpad triggers ctrlKey+wheel
+        if (e.ctrlKey) {
+            const delta = e.deltaY > 0 ? 0.9 : 1.1;
+            const newScale = Math.max(0.1, Math.min(5, scale * delta));
+            // Zoom towards mouse position
+            const rect = canvasRef.current?.getBoundingClientRect();
+            if (rect) {
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+                setOffsetX(prev => mouseX - (mouseX - prev) * (newScale / scale));
+                setOffsetY(prev => mouseY - (mouseY - prev) * (newScale / scale));
+            }
+            setScale(newScale);
+            return;
         }
-
-        setScale(newScale);
+        // Normal wheel (vertical/horizontal scroll) can be handled here if you want to support scrolling/panning with two fingers
+        // For now, do nothing (no scroll)
     }, [scale]);
 
     // Handle canvas pan
