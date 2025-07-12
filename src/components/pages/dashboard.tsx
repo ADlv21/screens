@@ -5,6 +5,7 @@ import { useAuth } from '@/components/auth/auth-provider'
 import { createClient } from '@/lib/supabase/client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 interface Project {
     id: string
@@ -99,19 +100,20 @@ const Dashboard = () => {
                                 <Card
                                     key={project.id}
                                     className="cursor-pointer hover:shadow-md transition-shadow"
-                                    onClick={() => router.push(`/project/${project.id}`)}
                                 >
-                                    <CardHeader>
-                                        <CardTitle>{project.name}</CardTitle>
-                                        {project.description && (
-                                            <CardDescription>{project.description}</CardDescription>
-                                        )}
-                                    </CardHeader>
-                                    <CardContent>
-                                        <div className="text-xs text-muted-foreground">
-                                            Last updated: {new Date(project.updated_at).toLocaleString()}
-                                        </div>
-                                    </CardContent>
+                                    <Link href={`/project/${project.id}`}>
+                                        <CardHeader>
+                                            <CardTitle>{project.name}</CardTitle>
+                                            {project.description && (
+                                                <CardDescription>{project.description}</CardDescription>
+                                            )}
+                                        </CardHeader>
+                                        <CardContent>
+                                            <div className="text-xs text-muted-foreground">
+                                                Last updated: {new Date(project.updated_at).toLocaleString()}
+                                            </div>
+                                        </CardContent>
+                                    </Link>
                                 </Card>
                             ))}
                         </div>

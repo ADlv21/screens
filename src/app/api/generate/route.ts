@@ -1,27 +1,18 @@
+import { getAiModel } from '@/lib/ai';
 import { generateObject, jsonSchema } from 'ai';
-import { openai } from '@ai-sdk/openai';
 import { createClient, getCurrentUser } from '@/lib/supabase/server';
+import { uniqueNamesGenerator, adjectives, colors, animals } from 'unique-names-generator';
 
-export const runtime = 'edge';
-
-// Simple random slug generator (adjective-noun)
-function randomSlug() {
-    const adjectives = [
-        'brave', 'calm', 'eager', 'fancy', 'gentle', 'happy', 'jolly', 'kind', 'lucky', 'mighty',
-        'nice', 'proud', 'quick', 'silly', 'tidy', 'witty', 'zany', 'bold', 'chill', 'daring'
-    ];
-    const nouns = [
-        'lion', 'tiger', 'bear', 'fox', 'wolf', 'owl', 'hawk', 'eagle', 'shark', 'whale',
-        'panda', 'koala', 'otter', 'moose', 'lynx', 'crane', 'finch', 'swan', 'seal', 'orca'
-    ];
-    const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
-    const noun = nouns[Math.floor(Math.random() * nouns.length)];
-    return `${adj}-${noun}-${Math.floor(Math.random() * 10000)}`;
-}
+const projectName = uniqueNamesGenerator({
+    dictionaries: [adjectives, colors, animals],
+    separator: '-',
+    length: 3,
+    style: 'lowerCase',
+});
 
 const systemPrompt = `
 You are an expert mobile UI designer and developer. Generate complete, standalone mobile UI components using HTML with Tailwind CSS classes. Always provide the full HTML structure including proper DOCTYPE, html, head, and body tags. Include Tailwind CSS CDN link in the head. Focus on mobile-first design, accessibility, and modern UI patterns. Make sure the component is fully functional and self-contained.
-If you are going to use Images make sure that you include only unspalash images you know for sure exists and fit them according to the screen size.
+If you are going to use Images make sure that you include only unspalash images you know for sure exists and fit them according to the screen size. Provide atleast 200 lines of code.
 Mobile Frontend Design
 Mobile-first approach
 Optimizing for touch interactions and mobile-native patterns focusing entirely on mobile user experience.
@@ -67,13 +58,12 @@ export async function POST(req: Request) {
     const supabase = await createClient();
     const projectId = crypto.randomUUID();
     // Use random slug for project name if prompt is empty or always if you want
-    const projectName = prompt && prompt.trim() ? prompt.slice(0, 80) : randomSlug();
     const projectDesc = prompt;
     const { error: projectError } = await supabase.from('projects').insert([
         {
             id: projectId,
             user_id: userId,
-            name: projectName || randomSlug(),
+            name: projectName,
             description: projectDesc,
             prompt: prompt,
         }
@@ -116,12 +106,13 @@ export async function POST(req: Request) {
 
     let llmResult;
     try {
-        const { object } = await generateObject({
-            model: openai('gpt-4o-mini'),
+        const { object, usage, providerMetadata } = await generateObject({
+            model: getAiModel('openai', 'gpt-4o-mini'),
             system: systemPrompt,
             prompt: prompt,
-            schema: mobileUISchema,
+            schema: mobileUISchema
         });
+        console.log({ usage, providerMetadata });
         llmResult = object;
     } catch (error) {
         return new Response(JSON.stringify({ error: 'LLM generation failed', details: error instanceof Error ? error.message : error }), { status: 500 });

@@ -83,3 +83,20 @@ export const TIERS: PricingTier[] = [
         highlighted: true,
     },
 ];
+
+export const providerModels = {
+    openai: [
+        'gpt-4o',
+        "gpt-4o-mini",
+        'gpt-4.1-mini',
+    ],
+    google: [
+        'gemini-2.5-pro',
+        'gemini-2.5-flash',
+        "claude-sonnet-4@20250514",
+        "claude-opus-4@20250514"
+    ],
+    groq: [
+        'llama-3-groq-70b-tool',
+    ],
+} as const;

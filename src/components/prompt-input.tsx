@@ -24,8 +24,8 @@ const EXAMPLE_PROMPTS = [
     "Build a music player interface with album artwork and controls"
 ]
 
-const MAX_CHARACTERS = 500
-const AUTO_SAVE_DELAY = 2000 // 2 seconds
+const MAX_CHARACTERS = 1000
+const AUTO_SAVE_DELAY = 2000
 
 export const PromptInput: React.FC<PromptInputProps> = ({
     onSubmit,
@@ -88,6 +88,9 @@ export const PromptInput: React.FC<PromptInputProps> = ({
         const value = e.target.value
         if (value.length <= MAX_CHARACTERS) {
             setPrompt(value)
+        } else {
+            // Truncate to max characters if exceeded
+            setPrompt(value.slice(0, MAX_CHARACTERS))
         }
     }
 
@@ -109,6 +112,30 @@ export const PromptInput: React.FC<PromptInputProps> = ({
         if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
             e.preventDefault()
             handleSubmit()
+        }
+    }
+
+    const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+        const pastedText = e.clipboardData.getData('text')
+        const currentText = prompt
+        const textarea = e.target as HTMLTextAreaElement
+        const start = textarea.selectionStart
+        const end = textarea.selectionEnd
+
+        // Create new text with pasted content
+        const newText = currentText.slice(0, start) + pastedText + currentText.slice(end)
+
+        // If the new text exceeds max length, truncate it
+        if (newText.length > MAX_CHARACTERS) {
+            e.preventDefault()
+            const truncatedText = newText.slice(0, MAX_CHARACTERS)
+            setPrompt(truncatedText)
+
+            // Set cursor position after paste
+            setTimeout(() => {
+                const newCursorPos = Math.min(start + pastedText.length, MAX_CHARACTERS)
+                textarea.setSelectionRange(newCursorPos, newCursorPos)
+            }, 0)
         }
     }
 
@@ -176,6 +203,7 @@ export const PromptInput: React.FC<PromptInputProps> = ({
                         value={prompt}
                         onChange={handlePromptChange}
                         onKeyDown={handleKeyDown}
+                        onPaste={handlePaste}
                         placeholder="Describe the mobile app screen you want to create... (e.g., 'Create a modern login screen for a fitness app with dark theme and gradient buttons')"
                         className={cn(
                             "min-h-[120px] resize-none",
