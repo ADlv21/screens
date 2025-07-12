@@ -1,298 +1,114 @@
-import { Book, Menu, Sunset, Trees, Zap } from "lucide-react";
+"use client";
 
 import {
-    Accordion,
-    AccordionContent,
-    AccordionItem,
-    AccordionTrigger,
-} from "@/components/ui/accordion";
+    Navbar,
+    NavBody,
+    NavItems,
+    MobileNav,
+    NavbarLogo,
+    NavbarButton,
+    MobileNavHeader,
+    MobileNavToggle,
+    MobileNavMenu,
+} from "@/components/ui/resizable-navbar";
 import { Button } from "@/components/ui/button";
-import {
-    NavigationMenu,
-    NavigationMenuContent,
-    NavigationMenuItem,
-    NavigationMenuLink,
-    NavigationMenuList,
-    NavigationMenuTrigger,
-} from "@/components/ui/navigation-menu";
-import {
-    Sheet,
-    SheetContent,
-    SheetHeader,
-    SheetTitle,
-    SheetTrigger,
-} from "@/components/ui/sheet";
+import { useState } from "react";
+import { IconLogout } from "@tabler/icons-react";
+import { useAuth } from "./auth/auth-provider";
 import Image from "next/image";
-import Link from "next/link";
 
-interface MenuItem {
-    title: string;
-    url: string;
-    description?: string;
-    icon?: React.ReactNode;
-    items?: MenuItem[];
-}
+const AuthenticatedNavbar = ({ children }: { children: React.ReactNode }) => {
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-interface AuthenticatedNavbarProps {
-    logo?: {
-        url: string;
-        src: string;
-        alt: string;
-        title: string;
-    };
-    menu?: MenuItem[];
-    auth?: {
-        login: {
-            title: string;
-            url: string;
-        };
-        signup: {
-            title: string;
-            url: string;
-        };
-    };
-}
+    const navItems = [
+        { name: "Projects", link: "/projects" },
+        { name: "Usage", link: "/usage" },
+        { name: "Settings", link: "/settings" },
+    ];
 
-const AuthenticatedNavbar = ({
-    logo = {
-        url: "https://www.shadcnblocks.com",
-        src: "https://deifkwefumgah.cloudfront.net/shadcnblocks/block/logos/shadcnblockscom-icon.svg",
-        alt: "logo",
-        title: "Shadcnblocks.com",
-    },
-    menu = [
-        { title: "Home", url: "#" },
-        {
-            title: "Products",
-            url: "#",
-            items: [
-                {
-                    title: "Blog",
-                    description: "The latest industry news, updates, and info",
-                    icon: <Book className="size-5 shrink-0" />,
-                    url: "#",
-                },
-                {
-                    title: "Company",
-                    description: "Our mission is to innovate and empower the world",
-                    icon: <Trees className="size-5 shrink-0" />,
-                    url: "#",
-                },
-                {
-                    title: "Careers",
-                    description: "Browse job listing and discover our workspace",
-                    icon: <Sunset className="size-5 shrink-0" />,
-                    url: "#",
-                },
-                {
-                    title: "Support",
-                    description:
-                        "Get in touch with our support team or visit our community forums",
-                    icon: <Zap className="size-5 shrink-0" />,
-                    url: "#",
-                },
-            ],
-        },
-        {
-            title: "Resources",
-            url: "#",
-            items: [
-                {
-                    title: "Help Center",
-                    description: "Get all the answers you need right here",
-                    icon: <Zap className="size-5 shrink-0" />,
-                    url: "#",
-                },
-                {
-                    title: "Contact Us",
-                    description: "We are here to help you with any questions you have",
-                    icon: <Sunset className="size-5 shrink-0" />,
-                    url: "#",
-                },
-                {
-                    title: "Status",
-                    description: "Check the current status of our services and APIs",
-                    icon: <Trees className="size-5 shrink-0" />,
-                    url: "#",
-                },
-                {
-                    title: "Terms of Service",
-                    description: "Our terms and conditions for using our services",
-                    icon: <Book className="size-5 shrink-0" />,
-                    url: "#",
-                },
-            ],
-        },
-        {
-            title: "Pricing",
-            url: "#",
-        },
-        {
-            title: "Blog",
-            url: "#",
-        },
-    ],
-    auth = {
-        login: { title: "Login", url: "#" },
-        signup: { title: "Sign up", url: "#" },
-    },
-}: AuthenticatedNavbarProps) => {
+    const { signOut } = useAuth()
+
     return (
-        <section className="py-4">
-            <div className="container">
-                {/* Desktop Menu */}
-                <nav className="hidden justify-between lg:flex">
-                    <div className="flex items-center gap-6">
-                        {/* Logo */}
-                        <a href={logo.url} className="flex items-center gap-2">
-                            <img src={logo.src} className="max-h-8" alt={logo.alt} />
-                            <span className="text-lg font-semibold tracking-tighter">
-                                {logo.title}
-                            </span>
-                        </a>
-                        <div className="flex items-center">
-                            <NavigationMenu>
-                                <NavigationMenuList>
-                                    {menu.map((item) => renderMenuItem(item))}
-                                </NavigationMenuList>
-                            </NavigationMenu>
-                        </div>
-                    </div>
-                    <div className="flex gap-2">
-                        <Button asChild variant="outline" size="sm">
-                            <a href={auth.login.url}>{auth.login.title}</a>
-                        </Button>
-                        <Button asChild size="sm">
-                            <a href={auth.signup.url}>{auth.signup.title}</a>
-                        </Button>
-                    </div>
-                </nav>
-
-                {/* Mobile Menu */}
-                <div className="block lg:hidden">
-                    <div className="flex items-center justify-between">
-                        {/* Logo */}
-                        <a href={logo.url} className="flex items-center gap-2">
+        <div className="relative w-full">
+            <Navbar>
+                {/* Desktop Navigation */}
+                <NavBody>
+                    <NavbarLogo />
+                    <NavItems items={navItems} />
+                    <div className="flex items-center gap-4">
+                        {/* Avatar */}
+                        <div className="flex items-center gap-3">
                             <Image
-                                src={logo.src}
-                                alt={logo.alt}
-                                width={32}
-                                height={32}
+                                src="https://avatar.iran.liara.run/public/boy"
+                                alt="User Avatar"
+                                className="h-8 w-8 rounded-full border-2 border-border"
                             />
-                        </a>
-                        <Sheet>
-                            <SheetTrigger asChild>
-                                <Button variant="outline" size="icon">
-                                    <Menu className="size-4" />
-                                </Button>
-                            </SheetTrigger>
-                            <SheetContent className="overflow-y-auto">
-                                <SheetHeader>
-                                    <SheetTitle>
-                                        <a href={logo.url} className="flex items-center gap-2">
-                                            <Image
-                                                src={logo.src}
-                                                alt={logo.alt}
-                                                width={32}
-                                                height={32}
-                                            />
-                                        </a>
-                                    </SheetTitle>
-                                </SheetHeader>
-                                <div className="flex flex-col gap-6 p-4">
-                                    <Accordion
-                                        type="single"
-                                        collapsible
-                                        className="flex w-full flex-col gap-4"
-                                    >
-                                        {menu.map((item) => renderMobileMenuItem(item))}
-                                    </Accordion>
+                        </div>
 
-                                    <div className="flex flex-col gap-3">
-                                        <Button asChild variant="outline">
-                                            <a href={auth.login.url}>{auth.login.title}</a>
-                                        </Button>
-                                        <Button asChild>
-                                            <a href={auth.signup.url}>{auth.signup.title}</a>
-                                        </Button>
-                                    </div>
-                                </div>
-                            </SheetContent>
-                        </Sheet>
+                        {/* Sign Out Button */}
+                        <NavbarButton
+                            variant="primary"
+                            onClick={signOut}
+                            className="flex items-center gap-2"
+                        >
+                            <IconLogout className="h-4 w-4" />
+                            Sign Out
+                        </NavbarButton>
                     </div>
-                </div>
-            </div>
-        </section>
-    );
-};
+                </NavBody>
 
-const renderMenuItem = (item: MenuItem) => {
-    if (item.items) {
-        return (
-            <NavigationMenuItem key={item.title}>
-                <NavigationMenuTrigger>{item.title}</NavigationMenuTrigger>
-                <NavigationMenuContent className="bg-popover text-popover-foreground">
-                    {item.items.map((subItem) => (
-                        <NavigationMenuLink asChild key={subItem.title} className="w-80">
-                            <SubMenuLink item={subItem} />
-                        </NavigationMenuLink>
-                    ))}
-                </NavigationMenuContent>
-            </NavigationMenuItem>
-        );
-    }
+                {/* Mobile Navigation */}
+                <MobileNav>
+                    <MobileNavHeader>
+                        <NavbarLogo />
+                        <MobileNavToggle
+                            isOpen={isMobileMenuOpen}
+                            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                        />
+                    </MobileNavHeader>
 
-    return (
-        <NavigationMenuItem key={item.title}>
-            <NavigationMenuLink
-                href={item.url}
-                className="group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-muted hover:text-accent-foreground"
-            >
-                {item.title}
-            </NavigationMenuLink>
-        </NavigationMenuItem>
-    );
-};
+                    <MobileNavMenu
+                        isOpen={isMobileMenuOpen}
+                        onClose={() => setIsMobileMenuOpen(false)}
+                    >
+                        {navItems.map((item, idx) => (
+                            <a
+                                key={`mobile-link-${idx}`}
+                                href={item.link}
+                                onClick={() => setIsMobileMenuOpen(false)}
+                                className="relative text-neutral-600 dark:text-neutral-300"
+                            >
+                                <span className="block">{item.name}</span>
+                            </a>
+                        ))}
 
-const renderMobileMenuItem = (item: MenuItem) => {
-    if (item.items) {
-        return (
-            <AccordionItem key={item.title} value={item.title} className="border-b-0">
-                <AccordionTrigger className="text-md py-0 font-semibold hover:no-underline">
-                    {item.title}
-                </AccordionTrigger>
-                <AccordionContent className="mt-2">
-                    {item.items.map((subItem) => (
-                        <SubMenuLink key={subItem.title} item={subItem} />
-                    ))}
-                </AccordionContent>
-            </AccordionItem>
-        );
-    }
-
-    return (
-        <a key={item.title} href={item.url} className="text-md font-semibold">
-            {item.title}
-        </a>
-    );
-};
-
-const SubMenuLink = ({ item }: { item: MenuItem }) => {
-    return (
-        <a
-            className="flex flex-row gap-4 rounded-md p-3 leading-none no-underline transition-colors outline-none select-none hover:bg-muted hover:text-accent-foreground"
-            href={item.url}
-        >
-            <div className="text-foreground">{item.icon}</div>
-            <div>
-                <div className="text-sm font-semibold">{item.title}</div>
-                {item.description && (
-                    <p className="text-sm leading-snug text-muted-foreground">
-                        {item.description}
-                    </p>
-                )}
-            </div>
-        </a>
+                        {/* Mobile Avatar and Sign Out */}
+                        <div className="flex w-full flex-col gap-4 pt-4 border-t border-border">
+                            <div className="flex items-center gap-3">
+                                <Image
+                                    src="https://avatar.iran.liara.run/public/boy"
+                                    alt="User Avatar"
+                                    className="h-8 w-8 rounded-full border-2 border-border"
+                                />
+                                <span className="text-sm text-muted-foreground">User</span>
+                            </div>
+                            <NavbarButton
+                                onClick={() => {
+                                    setIsMobileMenuOpen(false);
+                                    signOut();
+                                }}
+                                variant="primary"
+                                className="w-full flex items-center gap-2"
+                            >
+                                <IconLogout className="h-4 w-4" />
+                                Sign Out
+                            </NavbarButton>
+                        </div>
+                    </MobileNavMenu>
+                </MobileNav>
+            </Navbar>
+            {children}
+        </div>
     );
 };
 

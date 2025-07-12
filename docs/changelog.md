@@ -3,6 +3,13 @@
 ## [Unreleased]
 
 ### Added
+- **NEW**: Authenticated Navbar Component
+  - Clean, responsive navbar for authenticated users
+  - Left side: App Icon, Projects, Usage, Settings navigation items
+  - Right side: User avatar and sign out button
+  - Mobile-responsive with hamburger menu
+  - Uses existing resizable navbar components for consistency
+  - Follows shadcn/ui design patterns and theme
 - **NEW**: Comprehensive Prompt Input Component with full feature set
   - Beautiful, responsive prompt input form with character limit (500 chars)
   - Real-time validation with visual feedback

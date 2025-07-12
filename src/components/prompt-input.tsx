@@ -1,12 +1,12 @@
 'use client'
 
-import React, { useState, useEffect, useCallback, useRef } from 'react'
+import { cn } from '@/lib/utils'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { Sparkles, Save, Loader2, AlertCircle, CheckCircle } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 
 interface PromptInputProps {
     onSubmit: (prompt: string) => void
@@ -179,7 +179,7 @@ export const PromptInput: React.FC<PromptInputProps> = ({
                         placeholder="Describe the mobile app screen you want to create... (e.g., 'Create a modern login screen for a fitness app with dark theme and gradient buttons')"
                         className={cn(
                             "min-h-[120px] resize-none",
-                            !isValid && "border-destructive focus-visible:ring-destructive"
+                            !isValid && "border-muted focus-visible:ring-muted-foreground"
                         )}
                         disabled={isLoading || disabled}
                     />
