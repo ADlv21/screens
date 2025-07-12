@@ -1,7 +1,23 @@
 import { generateObject, jsonSchema } from 'ai';
 import { openai } from '@ai-sdk/openai';
+import { createClient, getCurrentUser } from '@/lib/supabase/server';
 
 export const runtime = 'edge';
+
+// Simple random slug generator (adjective-noun)
+function randomSlug() {
+    const adjectives = [
+        'brave', 'calm', 'eager', 'fancy', 'gentle', 'happy', 'jolly', 'kind', 'lucky', 'mighty',
+        'nice', 'proud', 'quick', 'silly', 'tidy', 'witty', 'zany', 'bold', 'chill', 'daring'
+    ];
+    const nouns = [
+        'lion', 'tiger', 'bear', 'fox', 'wolf', 'owl', 'hawk', 'eagle', 'shark', 'whale',
+        'panda', 'koala', 'otter', 'moose', 'lynx', 'crane', 'finch', 'swan', 'seal', 'orca'
+    ];
+    const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
+    const noun = nouns[Math.floor(Math.random() * nouns.length)];
+    return `${adj}-${noun}-${Math.floor(Math.random() * 10000)}`;
+}
 
 const systemPrompt = `
 You are an expert mobile UI designer and developer. Generate complete, standalone mobile UI components using HTML with Tailwind CSS classes. Always provide the full HTML structure including proper DOCTYPE, html, head, and body tags. Include Tailwind CSS CDN link in the head. Focus on mobile-first design, accessibility, and modern UI patterns. Make sure the component is fully functional and self-contained.
@@ -35,10 +51,37 @@ Infinite scroll for destination lists
 Mobile search with full-width input
 Bottom sheet style modals (ready for implementation)
 Native-feeling animations and transitions
-`
-export async function POST(req: Request) {
-    const { prompt } = await req.json();
+`;
 
+export async function POST(req: Request) {
+    // 1. Get user and prompt
+    const { prompt } = await req.json();
+    const user = await getCurrentUser();
+    if (!user) {
+        return new Response(JSON.stringify({ error: 'Not authenticated' }), { status: 401 });
+    }
+    const userId = user.id;
+
+    // 2. Create project
+    const supabase = await createClient();
+    const projectId = crypto.randomUUID();
+    // Use random slug for project name if prompt is empty or always if you want
+    const projectName = prompt && prompt.trim() ? prompt.slice(0, 80) : randomSlug();
+    const projectDesc = prompt;
+    const { error: projectError } = await supabase.from('projects').insert([
+        {
+            id: projectId,
+            user_id: userId,
+            name: projectName || randomSlug(),
+            description: projectDesc,
+            prompt: prompt,
+        }
+    ]);
+    if (projectError) {
+        return new Response(JSON.stringify({ error: 'Failed to create project', details: projectError.message }), { status: 500 });
+    }
+
+    // 3. LLM invocation
     const mobileUISchema = jsonSchema<{
         component: {
             name: string;
@@ -70,35 +113,67 @@ export async function POST(req: Request) {
         required: ['component']
     });
 
+    let llmResult;
     try {
         const { object } = await generateObject({
             model: openai('gpt-4o-mini'),
             system: systemPrompt,
-            prompt: `Create meditation and mindfulness app (3 screens)
-                    Serene, calming design with nature - inspired color palette
-                    Soft pastel backgrounds with subtle organic patterns and breathing animations
-                    Gentle typography using Poppins font family for tranquil reading experience
-                    Flowing layouts with circular elements mimicking ripples in water
-                    Muted earth tones with careful attention to visual hierarchy
-                    Smooth, zen- like transitions that promote mental clarity and focus.`,
+            prompt: prompt,
             schema: mobileUISchema,
         });
-
-        return new Response(
-            JSON.stringify({ data: object }),
-            {
-                status: 200,
-                headers: { 'Content-Type': 'text/html' },
-            }
-        );
+        llmResult = object;
     } catch (error) {
-        console.error('Generation error:', error);
-        return new Response(JSON.stringify({
-            error: 'Failed to generate response',
-            details: error instanceof Error ? error.message : 'Unknown error'
-        }), {
-            status: 500,
-            headers: { 'Content-Type': 'application/json' },
-        });
+        return new Response(JSON.stringify({ error: 'LLM generation failed', details: error instanceof Error ? error.message : error }), { status: 500 });
     }
+
+    // 4. Store HTML in Supabase Storage
+    const screenId = crypto.randomUUID();
+    const versionId = crypto.randomUUID();
+    const htmlFilePath = `projects/${projectId}/screens/${screenId}/v1/index.html`;
+    const htmlContent = llmResult.component.html;
+
+    const { error: storageError } = await supabase.storage
+        .from('html-files')
+        .upload(htmlFilePath, htmlContent, {
+            contentType: 'text/html',
+            upsert: true,
+        });
+    if (storageError) {
+        return new Response(JSON.stringify({ error: 'Failed to upload HTML', details: storageError.message }), { status: 500 });
+    }
+
+    // 5. Create screen and screen_version records
+    const { error: screenError } = await supabase.from('screens').insert([
+        {
+            id: screenId,
+            project_id: projectId,
+            name: llmResult.component.name,
+            order_index: 0,
+        }
+    ]);
+    if (screenError) {
+        return new Response(JSON.stringify({ error: 'Failed to create screen', details: screenError.message }), { status: 500 });
+    }
+
+    const { error: versionError } = await supabase.from('screen_versions').insert([
+        {
+            id: versionId,
+            screen_id: screenId,
+            version_number: 1,
+            user_prompt: prompt,
+            ai_prompt: prompt,
+            html_file_path: htmlFilePath,
+            created_by: userId,
+            is_current: true,
+        }
+    ]);
+    if (versionError) {
+        return new Response(JSON.stringify({ error: 'Failed to create screen version', details: versionError.message }), { status: 500 });
+    }
+
+    // 6. Return project ID and success
+    return new Response(JSON.stringify({ success: true, projectId }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+    });
 }
