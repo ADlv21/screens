@@ -25,6 +25,12 @@
 - Enhanced error handling for expired OTP links
 - Switched from creations/edits per month to a credit-based system for Standard (200 credits/month) and Pro (500 credits/month) plans. All usage tracking and enforcement is now credit-based.
 
+### Fixed
+- **Authentication Callback**: Fixed OAuth/PKCE flow handling in auth callback route
+  - Added support for both OAuth/PKCE flow (code parameter) and magic link flow (token/type parameters)
+  - Resolved redirect error handling that was causing successful authentications to show error pages
+  - Cleaned up debugging code for production
+
 ### Changed
 - **BREAKING**: Integrated dashboard functionality directly into home page
 - Removed separate `/dashboard` route
