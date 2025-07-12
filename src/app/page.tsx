@@ -4,6 +4,17 @@ import React from 'react'
 import { useAuth } from '@/components/auth/auth-provider'
 import { Button } from '@/components/ui/button'
 import { AppNavbar } from '@/components/navbar'
+import { AuthenticatedNavbar } from '@/components/authenticated-navbar'
+import {
+  Plus,
+  FolderOpen,
+  Sparkles,
+  BarChart3,
+  Clock,
+  Download,
+  Settings,
+  LogOut
+} from 'lucide-react'
 
 function LandingPage() {
   return (
@@ -111,43 +122,184 @@ function Dashboard() {
   const { user, signOut } = useAuth()
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          <div className="border-4 border-dashed border-gray-200 rounded-lg p-8">
-            <div className="text-center">
-              <h1 className="text-3xl font-bold text-gray-900 mb-4">
-                Welcome to AI Screens
-              </h1>
-              <p className="text-lg text-gray-600 mb-8">
-                Generate beautiful mobile UI screens with AI
-              </p>
+    <div className="min-h-screen bg-background">
+      <AuthenticatedNavbar />
 
-              <div className="space-y-4">
-                <div className="bg-white p-6 rounded-lg shadow">
-                  <h2 className="text-xl font-semibold mb-2">Your Account</h2>
-                  <p className="text-gray-600">Email: {user?.email}</p>
-                  <p className="text-gray-600">User ID: {user?.id}</p>
-                </div>
+      {/* Header Section */}
+      <div className="border-b bg-card/50 backdrop-blur supports-[backdrop-filter]:bg-card/50">
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex flex-col gap-2">
+            <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+            <p className="text-muted-foreground">
+              Welcome back! Here's what's happening with your projects.
+            </p>
+          </div>
+        </div>
+      </div>
 
-                <div className="bg-white p-6 rounded-lg shadow">
-                  <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
-                  <div className="space-x-4">
-                    <Button className="bg-indigo-600 hover:bg-indigo-700">
-                      Create New Project
-                    </Button>
-                    <Button variant="outline">
-                      View Projects
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={signOut}
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      Sign Out
-                    </Button>
-                  </div>
+      {/* Main Content */}
+      <div className="container mx-auto px-4 py-8">
+        {/* Stats Grid */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
+          <div className="rounded-lg border bg-card p-6">
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-md bg-primary/10">
+                <Sparkles className="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Total Creations</p>
+                <p className="text-2xl font-bold">24</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-lg border bg-card p-6">
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-md bg-chart-2/10">
+                <FolderOpen className="h-4 w-4 text-chart-2" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Active Projects</p>
+                <p className="text-2xl font-bold">8</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-lg border bg-card p-6">
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-md bg-chart-3/10">
+                <BarChart3 className="h-4 w-4 text-chart-3" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">This Month</p>
+                <p className="text-2xl font-bold">12</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-lg border bg-card p-6">
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-md bg-chart-4/10">
+                <Clock className="h-4 w-4 text-chart-4" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Last Created</p>
+                <p className="text-2xl font-bold">2h</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {/* Create New Project */}
+          <div className="rounded-lg border bg-card p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-md bg-primary/10">
+                <Plus className="h-5 w-5 text-primary" />
+              </div>
+              <h3 className="text-lg font-semibold">Create New Project</h3>
+            </div>
+            <p className="text-sm text-muted-foreground mb-4">
+              Start a new mobile UI project with AI-powered design generation.
+            </p>
+            <Button className="w-full">
+              <Plus className="mr-2 h-4 w-4" />
+              New Project
+            </Button>
+          </div>
+
+          {/* Recent Projects */}
+          <div className="rounded-lg border bg-card p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-md bg-chart-2/10">
+                <FolderOpen className="h-5 w-5 text-chart-2" />
+              </div>
+              <h3 className="text-lg font-semibold">Recent Projects</h3>
+            </div>
+            <div className="space-y-3 mb-4">
+              <div className="flex items-center justify-between p-3 rounded-md bg-muted/50">
+                <div>
+                  <p className="text-sm font-medium">E-commerce App</p>
+                  <p className="text-xs text-muted-foreground">Updated 2 hours ago</p>
                 </div>
+                <Button variant="ghost" size="sm">
+                  <FolderOpen className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="flex items-center justify-between p-3 rounded-md bg-muted/50">
+                <div>
+                  <p className="text-sm font-medium">Fitness Tracker</p>
+                  <p className="text-xs text-muted-foreground">Updated 1 day ago</p>
+                </div>
+                <Button variant="ghost" size="sm">
+                  <FolderOpen className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+            <Button variant="outline" className="w-full">
+              View All Projects
+            </Button>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="rounded-lg border bg-card p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 rounded-md bg-chart-4/10">
+                <Download className="h-5 w-5 text-chart-4" />
+              </div>
+              <h3 className="text-lg font-semibold">Quick Actions</h3>
+            </div>
+            <div className="space-y-3">
+              <Button variant="outline" className="w-full justify-start">
+                <Download className="mr-2 h-4 w-4" />
+                Export Templates
+              </Button>
+              <Button variant="outline" className="w-full justify-start">
+                <Settings className="mr-2 h-4 w-4" />
+                Settings
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full justify-start text-destructive hover:text-destructive"
+                onClick={signOut}
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                Sign Out
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Recent Activity */}
+        <div className="mt-8 rounded-lg border bg-card p-6">
+          <h3 className="text-lg font-semibold mb-4">Recent Activity</h3>
+          <div className="space-y-4">
+            <div className="flex items-center gap-4 p-4 rounded-lg bg-muted/30">
+              <div className="p-2 rounded-full bg-primary/10">
+                <Sparkles className="h-4 w-4 text-primary" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium">Generated new login screen</p>
+                <p className="text-xs text-muted-foreground">E-commerce App • 2 hours ago</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-4 p-4 rounded-lg bg-muted/30">
+              <div className="p-2 rounded-full bg-chart-2/10">
+                <FolderOpen className="h-4 w-4 text-chart-2" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium">Created new project</p>
+                <p className="text-xs text-muted-foreground">Fitness Tracker • 1 day ago</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-4 p-4 rounded-lg bg-muted/30">
+              <div className="p-2 rounded-full bg-chart-3/10">
+                <Download className="h-4 w-4 text-chart-3" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-medium">Exported project templates</p>
+                <p className="text-xs text-muted-foreground">Social Media App • 3 days ago</p>
               </div>
             </div>
           </div>

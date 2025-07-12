@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const token_hash = searchParams.get('token_hash')
     const type = searchParams.get('type') as EmailOtpType | null
-    const next = searchParams.get('next') ?? '/dashboard'
+    const next = searchParams.get('next') ?? '/'
     const error = searchParams.get('error')
     const error_description = searchParams.get('error_description')
 
@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
         })
 
         if (!verifyError) {
-            // Successfully verified, redirect to dashboard
+            // Successfully verified, redirect to home
             redirect(next)
         } else {
             console.error('OTP verification error:', verifyError)
