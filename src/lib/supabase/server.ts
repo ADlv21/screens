@@ -26,4 +26,32 @@ export async function createClient() {
             },
         }
     )
+}
+
+export async function getCurrentUser() {
+    const supabase = await createClient()
+
+    try {
+        const { data: { user }, error } = await supabase.auth.getUser()
+        if (error) {
+            return null
+        }
+        return user
+    } catch (error) {
+        return null
+    }
+}
+
+export async function getCurrentSession() {
+    const supabase = await createClient()
+
+    try {
+        const { data: { session }, error } = await supabase.auth.getSession()
+        if (error) {
+            return null
+        }
+        return session
+    } catch (error) {
+        return null
+    }
 } 

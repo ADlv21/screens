@@ -22,6 +22,8 @@ import {
     SheetTitle,
     SheetTrigger,
 } from "@/components/ui/sheet";
+import Image from "next/image";
+import Link from "next/link";
 
 interface MenuItem {
     title: string;
@@ -171,7 +173,12 @@ const AuthenticatedNavbar = ({
                     <div className="flex items-center justify-between">
                         {/* Logo */}
                         <a href={logo.url} className="flex items-center gap-2">
-                            <img src={logo.src} className="max-h-8" alt={logo.alt} />
+                            <Image
+                                src={logo.src}
+                                alt={logo.alt}
+                                width={32}
+                                height={32}
+                            />
                         </a>
                         <Sheet>
                             <SheetTrigger asChild>
@@ -183,7 +190,12 @@ const AuthenticatedNavbar = ({
                                 <SheetHeader>
                                     <SheetTitle>
                                         <a href={logo.url} className="flex items-center gap-2">
-                                            <img src={logo.src} className="max-h-8" alt={logo.alt} />
+                                            <Image
+                                                src={logo.src}
+                                                alt={logo.alt}
+                                                width={32}
+                                                height={32}
+                                            />
                                         </a>
                                     </SheetTitle>
                                 </SheetHeader>
