@@ -15,6 +15,7 @@ import { useState } from "react";
 import { IconLogout } from "@tabler/icons-react";
 import { useAuth } from "./auth/auth-provider";
 import Image from "next/image";
+import { ModeToggle } from "./theme-toggle";
 
 const AuthenticatedNavbar = ({ children }: { children: React.ReactNode }) => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -54,6 +55,13 @@ const AuthenticatedNavbar = ({ children }: { children: React.ReactNode }) => {
                         >
                             <IconLogout className="h-4 w-4" />
                             Sign Out
+                        </NavbarButton>
+
+                        <NavbarButton
+                            variant="primary"
+                            className="flex items-center p-0"
+                        >
+                            <ModeToggle />
                         </NavbarButton>
                     </div>
                 </NavBody>

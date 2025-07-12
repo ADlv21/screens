@@ -38,6 +38,7 @@
   - Implemented proper design system using globals.css theme
   - Used shadcn/ui components for consistent styling
   - Added quick action cards for better user experience
+- Replaced dropdown theme menu with a single toggle button in ModeToggle component for simpler light/dark switching. (2024-06-09)
 
 ### Technical
 - **NEW**: Added essential UI components following shadcn/ui patterns
