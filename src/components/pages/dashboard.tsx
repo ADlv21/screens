@@ -1,11 +1,12 @@
-import { AuthenticatedNavbar } from '@/components/authenticated-navbar'
-import { PromptInput } from '@/components/prompt-input'
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
-import { useAuth } from '@/components/auth/auth-provider'
-import { createClient } from '@/lib/supabase/client'
+import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
+import { createClient } from '@/lib/supabase/client'
+import { PromptInput } from '@/components/prompt-input'
+import { useAuth } from '@/components/auth/auth-provider'
+import { generateUIComponent } from '@/lib/actions/generate-ui'
+import { AuthenticatedNavbar } from '@/components/authenticated-navbar'
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 
 interface Project {
     id: string
@@ -53,25 +54,19 @@ const Dashboard = () => {
         setIsGenerating(true)
         setError(null)
         try {
-            const res = await fetch('/api/generate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt }),
-            })
-            if (!res.ok) {
-                let errorMsg = 'Failed to generate UI';
-                try {
-                    const data = await res.json();
-                    if (data && data.error) errorMsg = data.error + (data.details ? `: ${data.details}` : '');
-                } catch (e) {
-                    // ignore JSON parse error
+            const result = await generateUIComponent(prompt)
+
+            if (result.success) {
+                if (user) await fetchProjects(user.id)
+                if (result.projectId) {
+                    router.push(`/project/${result.projectId}`)
                 }
-                setError(errorMsg);
-                throw new Error(errorMsg);
+            } else {
+                setError(result.error || 'Failed to generate UI')
             }
-            if (user) await fetchProjects(user.id)
         } catch (error) {
             console.error('Error generating UI:', error)
+            setError(error instanceof Error ? error.message : 'An unexpected error occurred')
         } finally {
             setIsGenerating(false)
         }

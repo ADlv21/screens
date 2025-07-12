@@ -38,6 +38,11 @@
   - Landing page for non-authenticated users
   - Dashboard for authenticated users
 - Added loading state while checking authentication
+- **SECURITY**: Replaced API route with Server Action for UI generation
+  - Migrated from `/api/generate` route to server action for better security
+  - Added input validation (prompt length limits)
+  - Improved error handling and TypeScript integration
+  - No longer exposed as public endpoint - built-in CSRF protection
 - **IMPROVED**: Redesigned dashboard with professional SaaS-like interface
   - Replaced basic account info display with modern stats cards
   - Added project overview with recent activity feed
