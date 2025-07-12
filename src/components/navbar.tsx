@@ -13,8 +13,11 @@ import {
 } from "@/components/ui/resizable-navbar";
 import { useState } from "react";
 import { ModeToggle } from "./theme-toggle";
+import { useRouter } from "next/navigation";
 
 const AppNavbar = ({ children }: { children: React.ReactNode }) => {
+
+    const router = useRouter();
     const navItems = [
         {
             name: "Features",
@@ -43,7 +46,7 @@ const AppNavbar = ({ children }: { children: React.ReactNode }) => {
                         <NavbarButton
                             variant="secondary"
                             onClick={() => {
-                                console.log("Login");
+                                router.push("/auth/login");
                             }}
                         >
                             Login
