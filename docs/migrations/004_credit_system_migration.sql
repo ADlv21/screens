@@ -1,6 +1,24 @@
--- Migration: 003_utility_functions.sql
--- Description: Utility functions for common database operations
--- Date: 2024-01-XX
+-- Migration: 004_credit_system_migration.sql
+-- Description: Migrate from creations/edits per month to credit-based usage tracking
+-- Date: 2024-XX-XX
+
+-- 1. Remove old columns from credit_usage
+ALTER TABLE credit_usage
+  DROP COLUMN IF EXISTS monthly_creations_used,
+  DROP COLUMN IF EXISTS monthly_edits_used;
+
+-- 2. Add new columns for credit-based tracking
+ALTER TABLE credit_usage
+  ADD COLUMN IF NOT EXISTS credits_used integer DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS credits_granted integer DEFAULT 0;
+
+-- 3. Update comments
+COMMENT ON TABLE credit_usage IS 'Monthly usage tracking for credits';
+COMMENT ON COLUMN credit_usage.usage_month IS 'Month in YYYY-MM format for easy querying';
+COMMENT ON COLUMN credit_usage.credits_used IS 'Number of credits used this month';
+COMMENT ON COLUMN credit_usage.credits_granted IS 'Number of credits granted this month';
+
+-- 4. Replace utility functions with credit-based versions
 
 -- Function to get user's current credit usage for the current month
 CREATE OR REPLACE FUNCTION get_user_current_credits(user_uuid uuid)
@@ -58,60 +76,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Function to get screen version tree
-CREATE OR REPLACE FUNCTION get_screen_version_tree(screen_uuid uuid)
-RETURNS TABLE(
-    id uuid,
-    version_number integer,
-    user_prompt text,
-    created_at timestamp with time zone,
-    parent_version_id uuid,
-    is_current boolean,
-    generation_time_ms integer
-) AS $$
-BEGIN
-    RETURN QUERY
-    SELECT 
-        sv.id,
-        sv.version_number,
-        sv.user_prompt,
-        sv.created_at,
-        sv.parent_version_id,
-        sv.is_current,
-        sv.generation_time_ms
-    FROM screen_versions sv
-    WHERE sv.screen_id = screen_uuid
-    ORDER BY sv.version_number ASC;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Function to get project with screen count
-CREATE OR REPLACE FUNCTION get_user_projects_with_screen_count(user_uuid uuid)
-RETURNS TABLE(
-    id uuid,
-    name text,
-    description text,
-    created_at timestamp with time zone,
-    updated_at timestamp with time zone,
-    screen_count bigint
-) AS $$
-BEGIN
-    RETURN QUERY
-    SELECT 
-        p.id,
-        p.name,
-        p.description,
-        p.created_at,
-        p.updated_at,
-        COUNT(s.id) as screen_count
-    FROM projects p
-    LEFT JOIN screens s ON p.id = s.project_id AND s.is_active = true
-    WHERE p.user_id = user_uuid AND p.is_archived = false
-    GROUP BY p.id, p.name, p.description, p.created_at, p.updated_at
-    ORDER BY p.updated_at DESC;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
 -- Function to reset monthly credit usage (can be called by a cron job)
 CREATE OR REPLACE FUNCTION reset_monthly_credits()
 RETURNS void AS $$
@@ -122,30 +86,5 @@ BEGIN
         credits_granted = NULL,
         updated_at = now()
     WHERE usage_month < to_char(now(), 'YYYY-MM');
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Function to get user subscription status
-CREATE OR REPLACE FUNCTION get_user_subscription_status(user_uuid uuid)
-RETURNS TABLE(
-    subscription_plan text,
-    subscription_status text,
-    subscription_end_date timestamp with time zone,
-    is_active boolean
-) AS $$
-BEGIN
-    RETURN QUERY
-    SELECT 
-        u.subscription_plan,
-        u.subscription_status,
-        u.subscription_end_date,
-        CASE 
-            WHEN u.subscription_status = 'active' AND 
-                 (u.subscription_end_date IS NULL OR u.subscription_end_date > now())
-            THEN true
-            ELSE false
-        END as is_active
-    FROM users u
-    WHERE u.id = user_uuid;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER; 

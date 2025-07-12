@@ -140,3 +140,11 @@ If you encounter any issues with the migrations:
 2. Verify your database connection
 3. Review the error messages carefully
 4. Ensure you have the necessary permissions 
+
+# Migration Notes
+
+## 2024-XX-XX: Switch to Credit-Based Usage Tracking
+- Replaced `monthly_creations_used` and `monthly_edits_used` with `credits_used` and `credits_granted` in `credit_usage` table.
+- Updated all utility functions to use credits instead of creations/edits.
+- Standard Plan now grants 200 credits/month, Pro Plan grants 500 credits/month.
+- All usage tracking and enforcement is now credit-based. 

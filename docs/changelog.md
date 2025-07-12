@@ -23,6 +23,7 @@
 - Authentication callback and error handling pages
 - Resend confirmation email functionality
 - Enhanced error handling for expired OTP links
+- Switched from creations/edits per month to a credit-based system for Standard (200 credits/month) and Pro (500 credits/month) plans. All usage tracking and enforcement is now credit-based.
 
 ### Changed
 - **BREAKING**: Integrated dashboard functionality directly into home page

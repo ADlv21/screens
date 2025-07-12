@@ -189,10 +189,10 @@
   - [ ] Implement webhook handling for payment events
 
 - [ ] **Subscription Management**
-  - [ ] Implement Free/Standard/Pro plan limits (1/10/20 creations, 0/20/40 edits)
-  - [ ] Track monthly usage and reset counters
+  - [ ] Implement Free/Standard/Pro plan limits (1 credit for Free, 200 credits for Standard, 500 credits for Pro)
+  - [ ] Track monthly credit usage and reset counters
   - [ ] Handle yearly billing with $5 discount
-  - [ ] Add usage tracking and limits enforcement
+  - [ ] Add usage tracking and limits enforcement (credit-based)
   - [ ] Create upgrade/downgrade flow
   - [ ] Handle subscription cancellations and renewals
 
@@ -299,17 +299,15 @@ DODO_WEBHOOK_SECRET=
 ### 💰 **Pricing Model - Monthly Subscription**
 
 **Free Plan:**
-- 1 creation per month
+- 1 credit per month
 - Basic features only
 
 **Standard Plan: $29/month**
-- 10 creations per month
-- 20 edits per month
+- 200 credits per month
 - All features included
 
 **Pro Plan: $39/month**
-- 20 creations per month
-- 40 edits per month
+- 500 credits per month
 - All features included
 - Priority support
 

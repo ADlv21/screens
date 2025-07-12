@@ -11,7 +11,6 @@ import {
     MobileNavToggle,
     MobileNavMenu,
 } from "@/components/ui/resizable-navbar";
-import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { IconLogout } from "@tabler/icons-react";
 import { useAuth } from "./auth/auth-provider";
@@ -42,6 +41,8 @@ const AuthenticatedNavbar = ({ children }: { children: React.ReactNode }) => {
                                 src="https://avatar.iran.liara.run/public/boy"
                                 alt="User Avatar"
                                 className="h-8 w-8 rounded-full border-2 border-border"
+                                width={32}
+                                height={32}
                             />
                         </div>
 

@@ -74,8 +74,8 @@ CREATE TABLE credit_usage (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id uuid REFERENCES users(id) ON DELETE CASCADE,
     usage_month text NOT NULL, -- 'YYYY-MM' format for easy querying
-    monthly_creations_used integer DEFAULT 0,
-    monthly_edits_used integer DEFAULT 0,
+    credits_used integer DEFAULT 0,
+    credits_granted integer DEFAULT 0,
     created_at timestamp with time zone DEFAULT now(),
     updated_at timestamp with time zone DEFAULT now(),
     UNIQUE(user_id, usage_month)
@@ -268,7 +268,7 @@ CREATE TRIGGER ensure_single_current_screen_version BEFORE INSERT OR UPDATE ON s
 CREATE OR REPLACE FUNCTION create_initial_credit_usage()
 RETURNS TRIGGER AS $$
 BEGIN
-    INSERT INTO credit_usage (user_id, usage_month, monthly_creations_used, monthly_edits_used)
+    INSERT INTO credit_usage (user_id, usage_month, credits_used, credits_granted)
     VALUES (NEW.id, to_char(now(), 'YYYY-MM'), 0, 0);
     RETURN NEW;
 END;
@@ -283,7 +283,7 @@ COMMENT ON TABLE projects IS 'User projects containing multiple screens';
 COMMENT ON TABLE screens IS 'Individual UI screens within projects';
 COMMENT ON TABLE screen_versions IS 'Version history for each screen with parent-child relationships';
 COMMENT ON TABLE subscriptions IS 'Payment and billing history for user subscriptions';
-COMMENT ON TABLE credit_usage IS 'Monthly usage tracking for creations and edits';
+COMMENT ON TABLE credit_usage IS 'Monthly usage tracking for credits';
 
 COMMENT ON COLUMN screen_versions.user_prompt IS 'What the user asked for in their prompt';
 COMMENT ON COLUMN screen_versions.ai_prompt IS 'What was actually sent to the AI (for debugging)';
@@ -293,5 +293,5 @@ COMMENT ON COLUMN screen_versions.is_current IS 'Whether this is the active/late
 COMMENT ON COLUMN screen_versions.generation_time_ms IS 'How long the AI took to generate this version';
 
 COMMENT ON COLUMN credit_usage.usage_month IS 'Month in YYYY-MM format for easy querying';
-COMMENT ON COLUMN credit_usage.monthly_creations_used IS 'Number of creations used this month';
-COMMENT ON COLUMN credit_usage.monthly_edits_used IS 'Number of edits used this month'; 
+COMMENT ON COLUMN credit_usage.credits_used IS 'Number of credits used this month';
+COMMENT ON COLUMN credit_usage.credits_granted IS 'Number of credits granted this month'; 
