@@ -47,7 +47,7 @@ type GenerateUIResult = {
     error?: string;
 };
 
-export async function generateUIComponent(prompt: string): Promise<GenerateUIResult> {
+export async function generateUIComponent(prompt: string, projectId?: string): Promise<GenerateUIResult> {
     try {
         // Input validation
         if (!prompt || prompt.trim().length === 0) {
@@ -65,32 +65,58 @@ export async function generateUIComponent(prompt: string): Promise<GenerateUIRes
         }
 
         const userId = user.id;
-
-        // Generate unique project name
-        const projectName = uniqueNamesGenerator({
-            dictionaries: [adjectives, colors, animals],
-            separator: '-',
-            length: 3,
-            style: 'lowerCase',
-        });
-
-        // Create project
         const supabase = await createClient();
-        const projectId = crypto.randomUUID();
+        let finalProjectId = projectId;
 
-        const { error: projectError } = await supabase.from('projects').insert([
-            {
-                id: projectId,
-                user_id: userId,
-                name: projectName,
-                description: prompt,
-                prompt: prompt,
+        // If no projectId provided, create a new project
+        if (!projectId) {
+            // Generate unique project name
+            const projectName = uniqueNamesGenerator({
+                dictionaries: [adjectives, colors, animals],
+                separator: '-',
+                length: 3,
+                style: 'lowerCase',
+            });
+
+            // Create project
+            finalProjectId = crypto.randomUUID();
+
+            const { error: projectError } = await supabase.from('projects').insert([
+                {
+                    id: finalProjectId,
+                    user_id: userId,
+                    name: projectName,
+                    description: prompt,
+                    prompt: prompt,
+                }
+            ]);
+
+            if (projectError) {
+                console.error('Project creation error:', projectError);
+                return { success: false, error: 'Failed to create project' };
             }
-        ]);
+        } else {
+            // Verify project exists and user has access
+            const { data: project, error: projectError } = await supabase
+                .from('projects')
+                .select('id')
+                .eq('id', projectId)
+                .eq('user_id', userId)
+                .single();
 
-        if (projectError) {
-            console.error('Project creation error:', projectError);
-            return { success: false, error: 'Failed to create project' };
+            if (projectError || !project) {
+                return { success: false, error: 'Project not found or access denied' };
+            }
+
+            // Update project's updated_at timestamp
+            const { error: updateError } = await supabase
+                .from('projects')
+                .update({ updated_at: new Date().toISOString() })
+                .eq('id', projectId);
+
+            if (updateError) {
+                console.error('Project update error:', updateError);
+            }
         }
 
         // Define schema for LLM response
@@ -133,10 +159,21 @@ export async function generateUIComponent(prompt: string): Promise<GenerateUIRes
             schema: mobileUISchema
         });
 
+        // Get the next order index for the screen
+        const { data: lastScreen, error: orderError } = await supabase
+            .from('screens')
+            .select('order_index')
+            .eq('project_id', finalProjectId)
+            .order('order_index', { ascending: false })
+            .limit(1)
+            .single();
+
+        const nextOrderIndex = lastScreen ? lastScreen.order_index + 1 : 0;
+
         // Store HTML in Supabase Storage
         const screenId = crypto.randomUUID();
         const versionId = crypto.randomUUID();
-        const htmlFilePath = `projects/${projectId}/screens/${screenId}/v1/index.html`;
+        const htmlFilePath = `projects/${finalProjectId}/screens/${screenId}/v1/index.html`;
         const htmlContent = llmResult.component.html;
 
         const { error: storageError } = await supabase.storage
@@ -155,9 +192,9 @@ export async function generateUIComponent(prompt: string): Promise<GenerateUIRes
         const { error: screenError } = await supabase.from('screens').insert([
             {
                 id: screenId,
-                project_id: projectId,
+                project_id: finalProjectId,
                 name: llmResult.component.name,
-                order_index: 0,
+                order_index: nextOrderIndex,
             }
         ]);
 
@@ -185,7 +222,7 @@ export async function generateUIComponent(prompt: string): Promise<GenerateUIRes
             return { success: false, error: 'Failed to create screen version' };
         }
 
-        return { success: true, projectId };
+        return { success: true, projectId: finalProjectId };
 
     } catch (error) {
         console.error('Generate UI error:', error);
@@ -198,8 +235,9 @@ export async function generateUIComponent(prompt: string): Promise<GenerateUIRes
 
 export async function generateUIAndRedirect(formData: FormData) {
     const prompt = formData.get('prompt') as string;
+    const projectId = formData.get('projectId') as string | undefined;
 
-    const result = await generateUIComponent(prompt);
+    const result = await generateUIComponent(prompt, projectId);
 
     if (result.success && result.projectId) {
         redirect(`/project/${result.projectId}`);

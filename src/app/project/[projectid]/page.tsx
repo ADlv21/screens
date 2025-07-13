@@ -1,10 +1,10 @@
-import { getProjectHtmlUrl } from '@/lib/supabase/getProjectHtmlUrl';
+import { getProjectScreens } from '@/lib/supabase/getProjectScreens';
 import ProjectFlow from './ProjectFlow';
 
 const ProjectPage = async ({ params }: { params: Promise<{ projectid: string }> }) => {
     const { projectid } = await params;
-    const htmlUrl = await getProjectHtmlUrl(projectid);
-    return <ProjectFlow htmlUrl={htmlUrl} />;
+    const screens = await getProjectScreens(projectid);
+    return <ProjectFlow screens={screens} projectId={projectid} />;
 };
 
 export default ProjectPage;

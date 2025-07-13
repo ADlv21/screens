@@ -3,6 +3,18 @@
 ## [Unreleased]
 
 ### Added
+- **NEW**: Multi-Screen Project Support
+  - Users can now generate multiple screens within a single project
+  - Updated project page to display all screens in a ReactFlow interface
+  - Added floating ReactFlow node for generating additional screens
+  - Screens are automatically ordered and positioned in the flow
+  - Existing projects maintain backward compatibility with first screen
+- **NEW**: Floating Prompt Input Node
+  - Custom ReactFlow node with integrated prompt input functionality
+  - Positioned on the right side of the project flow
+  - Features gradient styling with purple-to-pink theme
+  - Includes loading states and keyboard shortcuts (Cmd+Enter)
+  - Draggable and interactive within the flow canvas
 - **NEW**: Authenticated Navbar Component
   - Clean, responsive navbar for authenticated users
   - Left side: App Icon, Projects, Usage, Settings navigation items
@@ -62,6 +74,12 @@
 - Used shadcn/ui components for consistent UI
 - Maintained server-side rendering where possible
 - Fixed Next.js 15 build error by wrapping useSearchParams in Suspense boundary
+- **REFACTORED**: Code cleanup and optimization
+  - Removed unused `getProjectHtmlUrl` function
+  - Renamed `getProjectHtmlUrl.ts` to `getProjectScreens.ts` for better clarity
+  - Removed unused edge-related functionality from ReactFlow (addEdge, Connection, useEdgesState)
+  - Cleaned up imports and reduced bundle size
+  - Simplified ProjectFlow component by removing unnecessary edge handling
 
 ## [Previous Versions]
 - Initial project setup with Next.js 14

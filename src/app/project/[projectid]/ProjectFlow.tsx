@@ -1,25 +1,33 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
     ReactFlow,
     Node,
-    Edge,
     Controls,
     Background,
     useNodesState,
-    useEdgesState,
-    addEdge,
-    Connection,
     NodeTypes,
     BackgroundVariant,
 } from '@xyflow/react';
 import '@xyflow/react/dist/base.css';
+import { ProjectScreen } from '@/lib/supabase/getProjectScreens';
+import { generateUIComponent } from '@/lib/actions/generate-ui';
+import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Sparkles, Loader2 } from 'lucide-react';
 
 interface MobileUIData {
     title: string;
     url: string;
 }
+
+interface PromptInputData {
+    onSubmit: (prompt: string) => void;
+    isLoading: boolean;
+}
+
 const MobileUINode = ({ data }: { data: MobileUIData }) => {
     const [htmlContent, setHtmlContent] = useState<string>('');
 
@@ -50,60 +58,141 @@ const MobileUINode = ({ data }: { data: MobileUIData }) => {
     );
 };
 
-const nodeTypes: NodeTypes = {
-    mobileUI: MobileUINode,
+const PromptInputNode = ({ data }: { data: PromptInputData }) => {
+    const [prompt, setPrompt] = useState('');
+
+    const handleSubmit = () => {
+        if (prompt.trim() && !data.isLoading) {
+            data.onSubmit(prompt.trim());
+            setPrompt('');
+        }
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+            handleSubmit();
+        }
+    };
+
+    return (
+        <div className="bg-white rounded-lg shadow-xl border-2 border-purple-200 overflow-hidden w-[480px]">
+            <div className="bg-gradient-to-r from-purple-500 to-pink-500 px-6 py-4 border-b">
+                <h3 className="text-xl font-semibold text-white flex items-center gap-2">
+                    <Sparkles className="w-6 h-6" />
+                    Generate New Screen
+                </h3>
+            </div>
+            <div className="p-6 space-y-6">
+                <div className="space-y-3">
+                    <p className="text-base text-gray-600 font-medium">
+                        Describe your new screen
+                    </p>
+                    <Textarea
+                        value={prompt}
+                        onChange={(e) => setPrompt(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        placeholder="Describe a new screen to add to this project... (e.g., 'A user profile page with avatar, name, and settings')"
+                        className="text-background resize-none min-h-[160px] text-base leading-relaxed"
+                        disabled={data.isLoading}
+                    />
+                    <p className="text-sm text-gray-500">
+                        Press Cmd/Ctrl + Enter to generate
+                    </p>
+                </div>
+                <Button
+                    onClick={handleSubmit}
+                    disabled={!prompt.trim() || data.isLoading}
+                    className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 h-12 text-lg font-medium"
+                >
+                    {data.isLoading ? (
+                        <>
+                            <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                            Generating...
+                        </>
+                    ) : (
+                        <>
+                            <Sparkles className="w-5 h-5 mr-2" />
+                            Generate Screen
+                        </>
+                    )}
+                </Button>
+            </div>
+        </div>
+    );
 };
 
-const ProjectFlow = ({ htmlUrl }: { htmlUrl: string | null }) => {
-    const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
-    const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
+const nodeTypes: NodeTypes = {
+    mobileUI: MobileUINode,
+    promptInput: PromptInputNode,
+};
 
-    console.log('htmlUrl', htmlUrl);
+const ProjectFlow = ({ screens, projectId }: { screens: ProjectScreen[]; projectId: string }) => {
+    const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
+    const [isGenerating, setIsGenerating] = useState(false);
+    const router = useRouter();
+
+    const handleGenerateNewScreen = useCallback(async (prompt: string) => {
+        setIsGenerating(true);
+        try {
+            const result = await generateUIComponent(prompt, projectId);
+
+            if (result.success) {
+                // Refresh the page to show the new screen
+                router.refresh();
+            } else {
+                console.error('Failed to generate screen:', result.error);
+            }
+        } catch (error) {
+            console.error('Error generating screen:', error);
+        } finally {
+            setIsGenerating(false);
+        }
+    }, [projectId, router]);
 
     useEffect(() => {
-        if (!htmlUrl) return;
-
-        // You can expand this to multiple nodes if needed
-        const initialNodes: Node[] = [
-            {
-                id: '1',
-                type: 'mobileUI',
-                position: { x: 0, y: 0 },
-                data: {
-                    title: 'Generated Mobile UI',
-                    url: htmlUrl,
-                },
+        // Create nodes for each screen
+        const screenNodes: Node[] = screens.map((screen, index) => ({
+            id: screen.id,
+            type: 'mobileUI',
+            position: { x: index * 500, y: 0 },
+            data: {
+                title: screen.name,
+                url: screen.htmlUrl,
             },
-        ];
+        }));
 
-        setNodes(initialNodes);
-        setEdges([]); // No edges for a single node
-    }, [htmlUrl, setNodes, setEdges]);
+        // Add prompt input node on the right side
+        const promptNode: Node = {
+            id: 'prompt-input',
+            type: 'promptInput',
+            position: { x: Math.max(screens.length * 500, 600), y: 50 },
+            data: {
+                onSubmit: handleGenerateNewScreen,
+                isLoading: isGenerating,
+            },
+            draggable: true,
+        };
 
-    const onConnect = (params: Connection) => setEdges((eds) => addEdge(params, eds));
+        setNodes([...screenNodes, promptNode]);
+    }, [screens, isGenerating, handleGenerateNewScreen, setNodes]);
 
     return (
         <div className="w-full h-screen bg-gray-50">
-            <div className="h-full">
-                <ReactFlow
-                    nodes={nodes}
-                    edges={edges}
-                    onNodesChange={onNodesChange}
-                    onEdgesChange={onEdgesChange}
-                    onConnect={onConnect}
-                    nodeTypes={nodeTypes}
-                    fitView
-                    fitViewOptions={{ padding: 100 }}
-                    attributionPosition="bottom-left"
-                >
-                    <Background
-                        color="#000000"
-                        variant={BackgroundVariant.Dots}
-                        gap={30}
-                    />
-                    <Controls />
-                </ReactFlow>
-            </div>
+            <ReactFlow
+                nodes={nodes}
+                onNodesChange={onNodesChange}
+                nodeTypes={nodeTypes}
+                fitView
+                fitViewOptions={{ padding: 100 }}
+                attributionPosition="bottom-left"
+            >
+                <Background
+                    color="#000000"
+                    variant={BackgroundVariant.Dots}
+                    gap={30}
+                />
+                <Controls />
+            </ReactFlow>
         </div>
     );
 };
