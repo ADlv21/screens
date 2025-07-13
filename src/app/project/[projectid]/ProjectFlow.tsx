@@ -75,7 +75,7 @@ const PromptInputNode = ({ data }: { data: PromptInputData }) => {
     };
 
     return (
-        <div className="bg-white rounded-lg shadow-xl border-2 border-purple-200 overflow-hidden w-[480px]">
+        <div className="bg-white rounded-lg shadow-xl border-2 border-purple-200 overflow-hidden w-[400px]">
             <div className="bg-gradient-to-r from-purple-500 to-pink-500 px-6 py-4 border-b">
                 <h3 className="text-xl font-semibold text-white flex items-center gap-2">
                     <Sparkles className="w-6 h-6" />
@@ -123,7 +123,6 @@ const PromptInputNode = ({ data }: { data: PromptInputData }) => {
 
 const nodeTypes: NodeTypes = {
     mobileUI: MobileUINode,
-    promptInput: PromptInputNode,
 };
 
 const ProjectFlow = ({ screens, projectId }: { screens: ProjectScreen[]; projectId: string }) => {
@@ -161,23 +160,11 @@ const ProjectFlow = ({ screens, projectId }: { screens: ProjectScreen[]; project
             },
         }));
 
-        // Add prompt input node on the right side
-        const promptNode: Node = {
-            id: 'prompt-input',
-            type: 'promptInput',
-            position: { x: Math.max(screens.length * 500, 600), y: 50 },
-            data: {
-                onSubmit: handleGenerateNewScreen,
-                isLoading: isGenerating,
-            },
-            draggable: true,
-        };
-
-        setNodes([...screenNodes, promptNode]);
-    }, [screens, isGenerating, handleGenerateNewScreen, setNodes]);
+        setNodes(screenNodes);
+    }, [screens, setNodes]);
 
     return (
-        <div className="w-full h-screen bg-gray-50">
+        <div className="w-full h-screen bg-gray-50 relative">
             <ReactFlow
                 nodes={nodes}
                 onNodesChange={onNodesChange}
@@ -193,6 +180,16 @@ const ProjectFlow = ({ screens, projectId }: { screens: ProjectScreen[]; project
                 />
                 <Controls />
             </ReactFlow>
+
+            {/* Fixed PromptInputNode in top right corner */}
+            <div className="fixed top-4 right-4 z-50">
+                <PromptInputNode
+                    data={{
+                        onSubmit: handleGenerateNewScreen,
+                        isLoading: isGenerating,
+                    }}
+                />
+            </div>
         </div>
     );
 };
