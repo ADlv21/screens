@@ -14,9 +14,10 @@ import '@xyflow/react/dist/base.css';
 import { ProjectScreen } from '@/lib/supabase/getProjectScreens';
 import { generateUIComponent } from '@/lib/actions/generate-ui';
 import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Sparkles, Loader2 } from 'lucide-react';
+import Link from 'next/link';
 
 interface MobileUIData {
     title: string;
@@ -165,6 +166,16 @@ const ProjectFlow = ({ screens, projectId }: { screens: ProjectScreen[]; project
 
     return (
         <div className="w-full h-screen bg-gray-50 relative">
+            <div className='bg-gray-950 w-full h-10 flex items-center justify-between px-4'>
+                <div className='text-white text-lg font-bold'>
+                    <Link href="/">AI Screens</Link>
+                </div>
+                <div className='text-white text-lg font-bold'>
+                    <Link className={`${buttonVariants({ variant: 'outline' })}`} href="/profile">
+                        <span className='ml-2'>Profile</span>
+                    </Link>
+                </div>
+            </div>
             <ReactFlow
                 nodes={nodes}
                 onNodesChange={onNodesChange}
@@ -172,17 +183,20 @@ const ProjectFlow = ({ screens, projectId }: { screens: ProjectScreen[]; project
                 fitView
                 fitViewOptions={{ padding: 100 }}
                 attributionPosition="bottom-left"
+                proOptions={{
+                    hideAttribution: true,
+                }}
             >
                 <Background
                     color="#000000"
                     variant={BackgroundVariant.Dots}
                     gap={30}
                 />
-                <Controls />
+                <Controls className='text-black' />
             </ReactFlow>
 
             {/* Fixed PromptInputNode in top right corner */}
-            <div className="fixed top-4 right-4 z-50">
+            <div className="fixed top-12 right-2 z-50">
                 <PromptInputNode
                     data={{
                         onSubmit: handleGenerateNewScreen,
@@ -190,6 +204,25 @@ const ProjectFlow = ({ screens, projectId }: { screens: ProjectScreen[]; project
                     }}
                 />
             </div>
+            {/* <footer className={`fixed bottom-0 w-full text-center text-sm z-50 py-2 px-4 transition-all duration-500 ${isGenerating
+                ? 'bg-gradient-to-t from-indigo-500 to-sky-500 animate-pulse'
+                : 'bg-gradient-to-t from-gray-500 to-gray-600'
+                }`}>
+                <p className={`text-white transition-all duration-300 ${isGenerating ? 'animate-bounce' : ''
+                    }`}>
+                    {isGenerating ? (
+                        <>
+                            <Sparkles className="w-3 h-3 inline mr-1 animate-spin" />
+                            Generating with <a href="https://www.ai-screens.com" className="text-white hover:text-blue-200 underline">AI Screens</a>
+                            <Sparkles className="w-3 h-3 inline ml-1 animate-spin" />
+                        </>
+                    ) : (
+                        <>
+                            Generated with <a href="https://www.ai-screens.com" className="text-white hover:text-blue-200 underline">AI Screens</a>
+                        </>
+                    )}
+                </p>
+            </footer> */}
         </div>
     );
 };
