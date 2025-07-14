@@ -3,6 +3,29 @@
 ## [Unreleased]
 
 ### Added
+- **Complete Polar Integration**: Full credit-based subscription system with Polar.sh
+  - Updated `generateUIComponent` with credit checking before generation
+  - Credit deduction tracking after successful generation  
+  - Upgrade URL generation when credits insufficient
+  - Dashboard subscription status display with credit balance
+  - Subscription management buttons (Customer Portal, Upgrade Plan)
+  - Error handling with upgrade options for insufficient credits
+  - ProjectFlow integration with upgrade prompts
+- **Test Documentation**: Comprehensive test flow guide (`docs/polar-test-flow.md`)
+  - Complete subscription → credit → generation → deduction workflow
+  - Manual testing checklist for all integration points
+  - Debug information and common issue solutions
+
+### Fixed
+- **Credit System Integration**: Replaced placeholder credit checking with live Polar API
+- **Response Structure**: Updated all components to handle new `GenerateUIResult` with `creditsRemaining` and `upgradeUrl`
+- **Error Handling**: Improved user experience when credits are insufficient with clear upgrade paths
+
+### Changed
+- **BREAKING**: `generateUIComponent` now returns additional fields (`creditsRemaining`, `upgradeUrl`)
+- **Dashboard UX**: Added prominent subscription status card with credit balance and management buttons  
+- **Payment System**: Completely removed Dodo Payments references, replaced with Polar.sh integration
+- **Documentation**: Updated environment variable examples to use Polar instead of Dodo
 - **NEW**: Multi-Screen Project Support
   - Users can now generate multiple screens within a single project
   - Updated project page to display all screens in a ReactFlow interface

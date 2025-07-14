@@ -5,46 +5,20 @@ import { generateObject, jsonSchema } from 'ai';
 import { createClient, getCurrentUser } from '@/lib/supabase/server';
 import { uniqueNamesGenerator, adjectives, colors, animals } from 'unique-names-generator';
 import { redirect } from 'next/navigation';
+import { Polar } from '@polar-sh/sdk';
+import { systemPrompt } from '@/config/constants';
 
-const systemPrompt = `
-You are an expert mobile UI designer and developer. Generate complete, standalone mobile UI components using HTML with Tailwind CSS classes. Always provide the full HTML structure including proper DOCTYPE, html, head, and body tags. Include Tailwind CSS CDN link in the head. Focus on mobile-first design, accessibility, and modern UI patterns. Make sure the component is fully functional and self-contained.
-If you are going to use Images make sure that you include only unspalsh images you know for sure exists and fit them according to the screen size. Provide atleast 200 lines of code.
-Mobile Frontend Design
-Mobile-first approach
-Optimizing for touch interactions and mobile-native patterns focusing entirely on mobile user experience.
-Provide standalone HTML Pages, use tailwind css
-Mobile-First Design Features
-Navigation
-Bottom tab navigation - Native mobile pattern for easy thumb navigation
-Sticky mobile headers with essential actions only
-Touch-friendly buttons with proper sizing (44px minimum)
-Layout & Spacing
-Full-width cards optimized for mobile screens
-Vertical stacking instead of grid layouts
-Mobile-optimized spacing (16px, 24px system)
-Single-column layouts throughout
-Interactions
-Large touch targets for buttons and interactive elements
-Swipe-friendly horizontal scrolling for categories
-Mobile gestures support with proper touch feedback
-Thumb-zone optimization for primary actions
-Content Organization
-Condensed information suitable for small screens
-Progressive disclosure with expandable sections
-Mobile-friendly typography with proper line heights
-Compact cards showing essential info first
-Mobile-Specific Patterns
-Pull-to-refresh ready structure
-Infinite scroll for destination lists
-Mobile search with full-width input
-Bottom sheet style modals (ready for implementation)
-Native-feeling animations and transitions
-`;
+const polar = new Polar({
+    accessToken: process.env.POLAR_ACCESS_TOKEN_SANDBOX,
+    server: 'sandbox',
+});
 
 type GenerateUIResult = {
     success: boolean;
     projectId?: string;
     error?: string;
+    creditsRemaining?: number;
+    upgradeUrl?: string;
 };
 
 export async function generateUIComponent(prompt: string, projectId?: string): Promise<GenerateUIResult> {
@@ -66,6 +40,46 @@ export async function generateUIComponent(prompt: string, projectId?: string): P
 
         const userId = user.id;
         const supabase = await createClient();
+
+        // Check credits via Polar Customer State API
+        let creditsLeft = 0;
+        let customerState;
+
+        try {
+            customerState = await polar.customers.getExternal({ externalId: userId });
+            const customerStateData: any = await polar.customers.getState({ id: customerState.id });
+
+            // Look for credit meter in the customer state
+            const creditMeter = customerStateData.activeMeters?.find(
+                (meter: any) => meter.meterId === '46de6ba0-ae2b-46f2-955b-0f6b95ab3d96' // screen_generation_meter ID
+            );
+
+            creditsLeft = creditMeter?.balance || 0;
+
+            if (creditsLeft <= 0) {
+                // Redirect to pricing page for upgrade
+                const upgradeUrl = `/pricing`;
+
+                return {
+                    success: false,
+                    error: `Insufficient credits. You have ${creditsLeft} credits remaining.`,
+                    creditsRemaining: creditsLeft,
+                    upgradeUrl
+                };
+            }
+        } catch (polarError) {
+            console.error('Polar credit check failed:', polarError);
+            // If customer doesn't exist, they likely need to subscribe
+            const upgradeUrl = `/pricing`;
+
+            return {
+                success: false,
+                error: 'No active subscription found. Please subscribe to generate screens.',
+                creditsRemaining: 0,
+                upgradeUrl
+            };
+        }
+
         let finalProjectId = projectId;
 
         // If no projectId provided, create a new project
@@ -222,7 +236,29 @@ export async function generateUIComponent(prompt: string, projectId?: string): P
             return { success: false, error: 'Failed to create screen version' };
         }
 
-        return { success: true, projectId: finalProjectId };
+        // Track usage event with Polar to deduct credits
+        let updatedCreditsLeft = creditsLeft - 1;
+        try {
+            // TODO: Implement proper event tracking once Polar SDK event API is clarified
+            console.log('Generated screen:', screenId, 'for user:', userId, 'Credits used: 1');
+
+            // Get updated credit balance after usage
+            const updatedCustomerState: any = await polar.customers.getState({ id: customerState.id });
+            const updatedCreditMeter = updatedCustomerState.activeMeters?.find(
+                (meter: any) => meter.meterId === '46de6ba0-ae2b-46f2-955b-0f6b95ab3d96' // screen_generation_meter ID
+            );
+            updatedCreditsLeft = updatedCreditMeter?.balance || (creditsLeft - 1);
+        } catch (eventError) {
+            console.error('Failed to get updated credit balance:', eventError);
+            // Use calculated value as fallback
+            updatedCreditsLeft = creditsLeft - 1;
+        }
+
+        return {
+            success: true,
+            projectId: finalProjectId,
+            creditsRemaining: updatedCreditsLeft
+        };
 
     } catch (error) {
         console.error('Generate UI error:', error);
