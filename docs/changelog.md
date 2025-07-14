@@ -36,6 +36,14 @@
 - Resend confirmation email functionality
 - Enhanced error handling for expired OTP links
 - Switched from creations/edits per month to a credit-based system for Standard (200 credits/month) and Pro (500 credits/month) plans. All usage tracking and enforcement is now credit-based.
+- **NEW**: Polar.sh Integration (Simplified Approach)
+  - **Pure Polar Credits** system replaces database credit tracking ⭐ **RECOMMENDED**
+  - Migration 004 removes credit_usage table and utility functions
+  - Uses Polar's native Customer State API for credit checks
+  - Automatic credit granting when subscriptions renew
+  - Single source of truth for credits eliminates sync issues
+  - Created simplified generateUIComponent with Polar integration
+  - Comprehensive setup guide (docs/polar-setup.md) with implementation examples
 
 ### Fixed
 - **Authentication Callback**: Fixed OAuth/PKCE flow handling in auth callback route
