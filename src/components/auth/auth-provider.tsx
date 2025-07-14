@@ -1,10 +1,10 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState } from 'react'
-import { User, Session } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
+import { User, Session } from '@supabase/supabase-js'
 
-interface AuthContextType {
+type AuthContextType = {
     user: User | null
     session: Session | null
     loading: boolean
@@ -18,6 +18,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [session, setSession] = useState<Session | null>(null)
     const [loading, setLoading] = useState(true)
     const supabase = createClient()
+
+    // Function to subscribe new users to Free Plan
+    const subscribeToFreePlan = async (user: User) => {
+        try {
+            const response = await fetch('/api/auth/signup-complete', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (!response.ok) {
+                console.error('Failed to subscribe to Free Plan:', await response.text());
+            } else {
+                console.log('Successfully subscribed to Free Plan');
+            }
+        } catch (error) {
+            console.error('Error subscribing to Free Plan:', error);
+        }
+    };
 
     useEffect(() => {
         // Get initial session
@@ -36,6 +56,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 setSession(session)
                 setUser(session?.user ?? null)
                 setLoading(false)
+
+                // Subscribe new users to Free Plan
+                if (event === 'SIGNED_IN' && session?.user) {
+                    // Check if this is a new user (created recently)
+                    const userCreatedAt = new Date(session.user.created_at);
+                    const now = new Date();
+                    const timeDiff = now.getTime() - userCreatedAt.getTime();
+                    const minutesDiff = timeDiff / (1000 * 60);
+
+                    // If user was created less than 5 minutes ago, they're likely new
+                    if (minutesDiff < 5) {
+                        console.log('New user detected, subscribing to Free Plan...');
+                        await subscribeToFreePlan(session.user);
+                    }
+                }
             }
         )
 
@@ -60,7 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     )
 }
 
-export function useAuth() {
+export const useAuth = () => {
     const context = useContext(AuthContext)
     if (context === undefined) {
         throw new Error('useAuth must be used within an AuthProvider')

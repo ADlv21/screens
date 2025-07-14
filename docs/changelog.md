@@ -3,6 +3,32 @@
 ## [Unreleased]
 
 ### Added
+- **NEW**: Settings page with subscription management
+  - Moved subscription status and credits section from dashboard to dedicated settings page at `/settings`
+  - Added account information display (email, user ID)
+  - Added billing & subscription management section with customer portal access
+  - Streamlined dashboard to focus on project generation and management
+
+### Fixed
+- **FIXED**: Credit deduction now working properly with Polar.sh events.ingest API
+  - Fixed event structure validation errors in the events.ingest API call
+  - Changed `type` to `name` field as required by the API
+  - Changed `external_customer_id` to `externalCustomerId` for proper camelCase format
+  - The `deductCredits` function now properly creates usage events to deduct credits from meters
+  - Uses the events.ingest API to send screen generation events to meter: `46de6ba0-ae2b-46f2-955b-0f6b95ab3d96`
+  - Includes proper error handling and logging for event ingestion
+  - This resolves the issue where credits remained at 200 despite multiple UI screen generations
+
+### Added
+- **NEW**: Complete Credit-Based Billing System with Polar.sh Integration
+  - Implemented 3-tier pricing system (Free: 10 credits, Standard: 200 credits, Pro: 500 credits)
+  - Automatic Free Plan subscription for new users with 10 monthly credits
+  - Credit checking before screen generation with appropriate upgrade prompts
+  - Proper credit deduction after successful screen generation
+  - Real-time credit status display component with progress bars and plan badges
+  - Comprehensive Polar.sh service layer for subscription management
+  - Seamless upgrade flow from Free → Standard → Pro plans
+  - Enhanced error handling and user feedback for credit operations
 - **Complete Polar Integration**: Full credit-based subscription system with Polar.sh
   - Updated `generateUIComponent` with credit checking before generation
   - Credit deduction tracking after successful generation  
@@ -69,6 +95,12 @@
   - Comprehensive setup guide (docs/polar-setup.md) with implementation examples
 
 ### Fixed
+- **Storage Bucket Access**: Fixed "Bucket not found" error when accessing HTML files
+  - Changed from `getPublicUrl()` to `createSignedUrl()` for private html-files bucket
+  - Switched to service role client for signed URL generation (better permissions)
+  - Enhanced error logging with detailed error information
+  - Added graceful fallback to prevent UI breaking when signed URL creation fails
+  - Fixed 404 errors when viewing generated screens in project flow
 - **Authentication Callback**: Fixed OAuth/PKCE flow handling in auth callback route
   - Added support for both OAuth/PKCE flow (code parameter) and magic link flow (token/type parameters)
   - Resolved redirect error handling that was causing successful authentications to show error pages

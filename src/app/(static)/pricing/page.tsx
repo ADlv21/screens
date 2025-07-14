@@ -200,7 +200,7 @@ const PricingPage = () => {
                     <div className="max-w-3xl mx-auto grid gap-6">
                         <div className="text-left">
                             <h4 className="font-semibold mb-2">How do credits work?</h4>
-                            <p className="text-sm text-neutral-600">Each screen generation uses 1 credit. Credits refresh monthly and don't roll over to the next month.</p>
+                            <p className="text-sm text-neutral-600">Each screen generation uses 1 credit. Credits refresh monthly and don&apos;t roll over to the next month.</p>
                         </div>
                         <div className="text-left">
                             <h4 className="font-semibold mb-2">Can I change plans anytime?</h4>
@@ -208,7 +208,7 @@ const PricingPage = () => {
                         </div>
                         <div className="text-left">
                             <h4 className="font-semibold mb-2">What formats can I export?</h4>
-                            <p className="text-sm text-neutral-600">All paid plans include HTML export. We're working on React and Vue component exports coming soon.</p>
+                            <p className="text-sm text-neutral-600">All paid plans include HTML export. We&apos;re working on React and Vue component exports coming soon.</p>
                         </div>
                     </div>
                 </div>

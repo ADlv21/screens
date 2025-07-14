@@ -3,10 +3,12 @@
 import { getAiModel } from '@/lib/ai';
 import { generateObject, jsonSchema } from 'ai';
 import { createClient, getCurrentUser } from '@/lib/supabase/server';
+import { uploadWithServiceRole } from '@/lib/supabase/service';
 import { uniqueNamesGenerator, adjectives, colors, animals } from 'unique-names-generator';
 import { redirect } from 'next/navigation';
 import { Polar } from '@polar-sh/sdk';
 import { systemPrompt } from '@/config/constants';
+import { getUserSubscriptionStatus, deductCredits } from './polar-subscription';
 
 const polar = new Polar({
     accessToken: process.env.POLAR_ACCESS_TOKEN_SANDBOX,
@@ -41,41 +43,24 @@ export async function generateUIComponent(prompt: string, projectId?: string): P
         const userId = user.id;
         const supabase = await createClient();
 
-        // Check credits via Polar Customer State API
-        let creditsLeft = 0;
-        let customerState;
+        // Check credits via Polar subscription service
+        const subscriptionStatus = await getUserSubscriptionStatus(userId);
+        const creditsLeft = subscriptionStatus.credits;
 
-        try {
-            customerState = await polar.customers.getExternal({ externalId: userId });
-            const customerStateData: any = await polar.customers.getState({ id: customerState.id });
+        if (creditsLeft <= 0) {
+            // Generate appropriate upgrade URL based on current plan
+            let upgradeUrl = `/pricing`;
 
-            // Look for credit meter in the customer state
-            const creditMeter = customerStateData.activeMeters?.find(
-                (meter: any) => meter.meterId === '46de6ba0-ae2b-46f2-955b-0f6b95ab3d96' // screen_generation_meter ID
-            );
-
-            creditsLeft = creditMeter?.balance || 0;
-
-            if (creditsLeft <= 0) {
-                // Redirect to pricing page for upgrade
-                const upgradeUrl = `/pricing`;
-
-                return {
-                    success: false,
-                    error: `Insufficient credits. You have ${creditsLeft} credits remaining.`,
-                    creditsRemaining: creditsLeft,
-                    upgradeUrl
-                };
+            if (subscriptionStatus.plan === 'free') {
+                upgradeUrl = `/api/checkout?product_id=410368fd-96de-4dfb-9640-a9ada2eac149`; // Standard Plan
+            } else if (subscriptionStatus.plan === 'standard') {
+                upgradeUrl = `/api/checkout?product_id=3dfaf594-130c-45ac-a39e-0070ebe26124`; // Pro Plan
             }
-        } catch (polarError) {
-            console.error('Polar credit check failed:', polarError);
-            // If customer doesn't exist, they likely need to subscribe
-            const upgradeUrl = `/pricing`;
 
             return {
                 success: false,
-                error: 'No active subscription found. Please subscribe to generate screens.',
-                creditsRemaining: 0,
+                error: `Insufficient credits. You have ${creditsLeft} credits remaining.`,
+                creditsRemaining: creditsLeft,
                 upgradeUrl
             };
         }
@@ -108,6 +93,19 @@ export async function generateUIComponent(prompt: string, projectId?: string): P
             if (projectError) {
                 console.error('Project creation error:', projectError);
                 return { success: false, error: 'Failed to create project' };
+            }
+
+            // Verify project was created successfully before proceeding
+            const { data: createdProject, error: verifyError } = await supabase
+                .from('projects')
+                .select('id, user_id')
+                .eq('id', finalProjectId)
+                .eq('user_id', userId)
+                .single();
+
+            if (verifyError || !createdProject) {
+                console.error('Project verification error:', verifyError);
+                return { success: false, error: 'Failed to verify project creation' };
             }
         } else {
             // Verify project exists and user has access
@@ -184,21 +182,21 @@ export async function generateUIComponent(prompt: string, projectId?: string): P
 
         const nextOrderIndex = lastScreen ? lastScreen.order_index + 1 : 0;
 
-        // Store HTML in Supabase Storage
+        // Store HTML in Supabase Storage using service role (bypasses RLS)
         const screenId = crypto.randomUUID();
         const versionId = crypto.randomUUID();
         const htmlFilePath = `projects/${finalProjectId}/screens/${screenId}/v1/index.html`;
         const htmlContent = llmResult.component.html;
 
-        const { error: storageError } = await supabase.storage
-            .from('html-files')
-            .upload(htmlFilePath, htmlContent, {
-                contentType: 'text/html',
-                upsert: true,
-            });
+        const uploadResult = await uploadWithServiceRole(
+            'html-files',
+            htmlFilePath,
+            htmlContent,
+            'text/html'
+        );
 
-        if (storageError) {
-            console.error('Storage error:', storageError);
+        if (!uploadResult.success) {
+            console.error('Storage error:', uploadResult.error);
             return { success: false, error: 'Failed to upload HTML' };
         }
 
@@ -236,23 +234,17 @@ export async function generateUIComponent(prompt: string, projectId?: string): P
             return { success: false, error: 'Failed to create screen version' };
         }
 
-        // Track usage event with Polar to deduct credits
-        let updatedCreditsLeft = creditsLeft - 1;
-        try {
-            // TODO: Implement proper event tracking once Polar SDK event API is clarified
-            console.log('Generated screen:', screenId, 'for user:', userId, 'Credits used: 1');
+        // Deduct credits after successful generation
+        const deductionResult = await deductCredits(userId, 1);
+        let updatedCreditsLeft = deductionResult.newBalance;
 
-            // Get updated credit balance after usage
-            const updatedCustomerState: any = await polar.customers.getState({ id: customerState.id });
-            const updatedCreditMeter = updatedCustomerState.activeMeters?.find(
-                (meter: any) => meter.meterId === '46de6ba0-ae2b-46f2-955b-0f6b95ab3d96' // screen_generation_meter ID
-            );
-            updatedCreditsLeft = updatedCreditMeter?.balance || (creditsLeft - 1);
-        } catch (eventError) {
-            console.error('Failed to get updated credit balance:', eventError);
+        if (!deductionResult.success) {
+            console.error('Failed to deduct credits:', deductionResult.error);
             // Use calculated value as fallback
             updatedCreditsLeft = creditsLeft - 1;
         }
+
+        console.log('Generated screen:', screenId, 'for user:', userId, 'Credits used: 1, Remaining:', updatedCreditsLeft);
 
         return {
             success: true,

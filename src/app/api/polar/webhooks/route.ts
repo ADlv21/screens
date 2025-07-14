@@ -13,7 +13,8 @@ export const POST = Webhooks({
 
             // Handle subscription events
             if (payload.type.startsWith('subscription.')) {
-                const data = payload.data as any;
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const data = payload.data as any; // Webhook payload data structure varies by event type
 
                 if (payload.type === 'subscription.created' || payload.type === 'subscription.updated') {
                     await supabase
