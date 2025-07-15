@@ -1,27 +1,31 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useAuth } from '@/components/auth/auth-provider'
 import { AuthenticatedNavbar } from '@/components/authenticated-navbar'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { useRouter } from 'next/navigation'
 import { Crown, CreditCard, Zap, Settings, User } from 'lucide-react'
 
 const SettingsPage = () => {
-    const [creditsRemaining, setCreditsRemaining] = useState<number | null>(null)
+    const [creditsRemaining, setCreditsRemaining] = useState<number>(0)
+    const [plan, setPlan] = useState<string>('')
     const [loading, setLoading] = useState(true)
+    const router = useRouter()
     const { user } = useAuth()
 
     useEffect(() => {
-        const fetchCreditStatus = async () => {
-            if (!user) return
+        if (!user?.id) return
 
+        const fetchCreditStatus = async () => {
             try {
                 const response = await fetch('/api/user/credit-status')
                 if (response.ok) {
                     const data = await response.json()
                     setCreditsRemaining(data.credits)
+                    setPlan(data.plan)
                 }
             } catch (error) {
                 console.error('Error fetching credit status:', error)
@@ -31,7 +35,7 @@ const SettingsPage = () => {
         }
 
         fetchCreditStatus()
-    }, [user])
+    }, [user?.id])
 
     if (!user) {
         return <div>Please log in to access settings.</div>
@@ -58,12 +62,16 @@ const SettingsPage = () => {
                             <CardContent>
                                 <div className="space-y-2">
                                     <div>
+                                        <label className="text-sm font-medium text-muted-foreground">User ID</label>
+                                        <p className="text-sm font-mono">{user.id}</p>
+                                    </div>
+                                    <div>
                                         <label className="text-sm font-medium text-muted-foreground">Email</label>
                                         <p className="text-sm">{user.email}</p>
                                     </div>
                                     <div>
-                                        <label className="text-sm font-medium text-muted-foreground">User ID</label>
-                                        <p className="text-sm font-mono">{user.id}</p>
+                                        <label className="text-sm font-medium text-muted-foreground">Plan</label>
+                                        <p className="text-sm">{plan.charAt(0).toUpperCase() + plan.slice(1)}</p>
                                     </div>
                                 </div>
                             </CardContent>
@@ -111,14 +119,14 @@ const SettingsPage = () => {
                                             <CreditCard className="h-4 w-4" />
                                             Manage Subscription
                                         </Button>
-                                        {!loading && (creditsRemaining === null || creditsRemaining === 0) && (
+                                        {!loading && creditsRemaining === 0 && (
                                             <Button
                                                 size="sm"
-                                                onClick={() => window.location.href = '/api/checkout?product_id=410368fd-96de-4dfb-9640-a9ada2eac149'}
+                                                onClick={() => router.push('/pricing')}
                                                 className="flex items-center gap-1"
                                             >
                                                 <Crown className="h-4 w-4" />
-                                                {creditsRemaining === null ? 'Subscribe Now' : 'Upgrade Plan'}
+                                                {creditsRemaining === 0 ? 'Subscribe Now' : 'Upgrade Plan'}
                                             </Button>
                                         )}
                                     </div>
@@ -150,7 +158,7 @@ const SettingsPage = () => {
                                         </Button>
                                         <Button
                                             variant="outline"
-                                            onClick={() => window.location.href = '/pricing'}
+                                            onClick={() => router.push('/pricing')}
                                             className="flex items-center gap-2"
                                         >
                                             <Crown className="h-4 w-4" />

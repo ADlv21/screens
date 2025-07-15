@@ -19,26 +19,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [loading, setLoading] = useState(true)
     const supabase = createClient()
 
-    // Function to subscribe new users to Free Plan
-    const subscribeToFreePlan = async (user: User) => {
-        try {
-            const response = await fetch('/api/auth/signup-complete', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            });
-
-            if (!response.ok) {
-                console.error('Failed to subscribe to Free Plan:', await response.text());
-            } else {
-                console.log('Successfully subscribed to Free Plan');
-            }
-        } catch (error) {
-            console.error('Error subscribing to Free Plan:', error);
-        }
-    };
-
     useEffect(() => {
         // Get initial session
         const getInitialSession = async () => {
@@ -56,21 +36,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 setSession(session)
                 setUser(session?.user ?? null)
                 setLoading(false)
-
-                // Subscribe new users to Free Plan
-                if (event === 'SIGNED_IN' && session?.user) {
-                    // Check if this is a new user (created recently)
-                    const userCreatedAt = new Date(session.user.created_at);
-                    const now = new Date();
-                    const timeDiff = now.getTime() - userCreatedAt.getTime();
-                    const minutesDiff = timeDiff / (1000 * 60);
-
-                    // If user was created less than 5 minutes ago, they're likely new
-                    if (minutesDiff < 5) {
-                        console.log('New user detected, subscribing to Free Plan...');
-                        await subscribeToFreePlan(session.user);
-                    }
-                }
             }
         )
 

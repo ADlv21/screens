@@ -10,15 +10,12 @@ const polar = new Polar({
 export async function GET(request: NextRequest) {
     try {
         const supabase = await createClient();
-
-        // Get the authenticated user from Supabase
         const { data: { user }, error } = await supabase.auth.getUser();
 
         if (error || !user) {
             return NextResponse.json({ error: 'User not authenticated' }, { status: 401 });
         }
 
-        // Get customer by external ID
         let customer;
         try {
             customer = await polar.customers.getExternal({ externalId: user.id });
@@ -31,9 +28,11 @@ export async function GET(request: NextRequest) {
             });
         }
 
-        // Redirect to Polar customer portal
-        const portalUrl = `https://sandbox.polar.sh/customers/${customer.id}`;
-        return NextResponse.redirect(portalUrl);
+        const session = await polar.customerSessions.create({
+            customerId: customer.id,
+        });
+
+        return NextResponse.redirect(session.customerPortalUrl);
 
     } catch (error) {
         console.error('Customer portal creation failed:', error);

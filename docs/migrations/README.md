@@ -21,6 +21,8 @@ This directory contains the SQL migration scripts for setting up the AI Screens 
 - Drops tables, functions, triggers, policies, and storage
 - Run this first if you need to reset your database
 
+**Note**: Previous redundant migration files (`001_storage_bucket_fix.sql`, `001_storage_bucket_simple.sql`) have been removed as their functionality is now included in the main migration file.
+
 ## **Simplified Architecture**
 
 ### ✅ What's Included

@@ -236,27 +236,23 @@ export async function generateUIComponent(prompt: string, projectId?: string): P
 
         // Deduct credits after successful generation
         const deductionResult = await deductCredits(userId, 1);
-        let updatedCreditsLeft = deductionResult.newBalance;
-
         if (!deductionResult.success) {
             console.error('Failed to deduct credits:', deductionResult.error);
-            // Use calculated value as fallback
-            updatedCreditsLeft = creditsLeft - 1;
         }
 
-        console.log('Generated screen:', screenId, 'for user:', userId, 'Credits used: 1, Remaining:', updatedCreditsLeft);
+        const updatedCreditsLeft = deductionResult.newBalance;
 
         return {
             success: true,
             projectId: finalProjectId,
-            creditsRemaining: updatedCreditsLeft
+            creditsRemaining: updatedCreditsLeft,
         };
 
     } catch (error) {
         console.error('Generate UI error:', error);
         return {
             success: false,
-            error: error instanceof Error ? error.message : 'Unknown error occurred'
+            error: error instanceof Error ? error.message : 'An unexpected error occurred',
         };
     }
 }

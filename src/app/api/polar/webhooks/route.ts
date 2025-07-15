@@ -6,8 +6,6 @@ export const POST = Webhooks({
 
     // Catch-all handler for all webhook events
     onPayload: async (payload) => {
-        console.log('Received Polar webhook:', payload.type, payload.data);
-
         try {
             const supabase = await createClient();
 
@@ -46,19 +44,16 @@ export const POST = Webhooks({
 
             // Handle customer state changes (for credit updates)
             if (payload.type === 'customer.updated' || payload.type === 'customer.state_changed') {
-                console.log('Customer state updated - credits may have changed');
-                // Polar automatically manages credits, so we just log this for now
+                // Polar automatically manages credits, so we just acknowledge this
             }
 
             // Handle benefit grants (when credits are given)
             if (payload.type.startsWith('benefit_grant.')) {
-                console.log('Benefit grant event:', payload.type);
                 // Credits are automatically managed by Polar
             }
 
             // Handle orders (one-time purchases)
             if (payload.type.startsWith('order.')) {
-                console.log('Order event:', payload.type);
                 // Handle order-related events if needed
             }
 

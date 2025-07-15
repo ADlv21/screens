@@ -20,7 +20,6 @@ export async function GET(request: NextRequest) {
             credits: subscriptionStatus.credits,
             plan: subscriptionStatus.plan,
             hasSubscription: subscriptionStatus.hasSubscription,
-            subscriptionId: subscriptionStatus.subscriptionId,
         });
 
     } catch (error) {

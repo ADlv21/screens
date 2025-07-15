@@ -3,148 +3,42 @@
 ## [Unreleased]
 
 ### Added
-- **NEW**: Settings page with subscription management
-  - Moved subscription status and credits section from dashboard to dedicated settings page at `/settings`
-  - Added account information display (email, user ID)
-  - Added billing & subscription management section with customer portal access
-  - Streamlined dashboard to focus on project generation and management
+- **Simplified Free Plan Subscription**: Streamlined server-side automatic free plan subscription for new users
+  - Moved logic from client-side `useEffect` to server-side auth callback
+  - Replaced fragile time-based detection (< 5 minutes) with reliable database checks
+  - Enhanced error handling that doesn't block authentication flow
+  - Added proper logging for subscription success/failure
+  - Removed unused parameters and client-side complexity
 
-### Fixed
-- **FIXED**: Credit deduction now working properly with Polar.sh events.ingest API
-  - Fixed event structure validation errors in the events.ingest API call
-  - Changed `type` to `name` field as required by the API
-  - Changed `external_customer_id` to `externalCustomerId` for proper camelCase format
-  - The `deductCredits` function now properly creates usage events to deduct credits from meters
-  - Uses the events.ingest API to send screen generation events to meter: `46de6ba0-ae2b-46f2-955b-0f6b95ab3d96`
-  - Includes proper error handling and logging for event ingestion
-  - This resolves the issue where credits remained at 200 despite multiple UI screen generations
-
-### Added
-- **NEW**: Complete Credit-Based Billing System with Polar.sh Integration
-  - Implemented 3-tier pricing system (Free: 10 credits, Standard: 200 credits, Pro: 500 credits)
-  - Automatic Free Plan subscription for new users with 10 monthly credits
-  - Credit checking before screen generation with appropriate upgrade prompts
-  - Proper credit deduction after successful screen generation
-  - Real-time credit status display component with progress bars and plan badges
-  - Comprehensive Polar.sh service layer for subscription management
-  - Seamless upgrade flow from Free → Standard → Pro plans
-  - Enhanced error handling and user feedback for credit operations
-- **Complete Polar Integration**: Full credit-based subscription system with Polar.sh
-  - Updated `generateUIComponent` with credit checking before generation
-  - Credit deduction tracking after successful generation  
-  - Upgrade URL generation when credits insufficient
-  - Dashboard subscription status display with credit balance
-  - Subscription management buttons (Customer Portal, Upgrade Plan)
-  - Error handling with upgrade options for insufficient credits
-  - ProjectFlow integration with upgrade prompts
-- **Test Documentation**: Comprehensive test flow guide (`docs/polar-test-flow.md`)
-  - Complete subscription → credit → generation → deduction workflow
-  - Manual testing checklist for all integration points
-  - Debug information and common issue solutions
-
-### Fixed
-- **Credit System Integration**: Replaced placeholder credit checking with live Polar API
-- **Response Structure**: Updated all components to handle new `GenerateUIResult` with `creditsRemaining` and `upgradeUrl`
-- **Error Handling**: Improved user experience when credits are insufficient with clear upgrade paths
+### Cleanup & Refactoring
+- **Code Cleanup**: Comprehensive codebase cleanup and refactoring
+  - Removed unused test file `src/components/delete-later-polar-test.tsx` marked for deletion
+  - Removed unused CreditStatus component `src/components/credit-status.tsx` (not used anywhere)
+  - Cleaned up redundant migration files (`001_storage_bucket_fix.sql`, `001_storage_bucket_simple.sql`)
+  - Replaced placeholder content in `feature-grid.tsx` with actual app features
+  - Updated landing page with proper branding and feature descriptions
+  - Removed debugging console.log statements while preserving legitimate error logging
+  - Removed unused imports: `Box`, `Lock`, `Search`, `Settings` from `feature-grid.tsx`
+  - Improved code organization and removed unused imports
+  - Updated migration documentation to reflect current state
 
 ### Changed
-- **BREAKING**: `generateUIComponent` now returns additional fields (`creditsRemaining`, `upgradeUrl`)
-- **Dashboard UX**: Added prominent subscription status card with credit balance and management buttons  
-- **Payment System**: Completely removed Dodo Payments references, replaced with Polar.sh integration
-- **Documentation**: Updated environment variable examples to use Polar instead of Dodo
-- **NEW**: Multi-Screen Project Support
-  - Users can now generate multiple screens within a single project
-  - Updated project page to display all screens in a ReactFlow interface
-  - Added floating ReactFlow node for generating additional screens
-  - Screens are automatically ordered and positioned in the flow
-  - Existing projects maintain backward compatibility with first screen
-- **NEW**: Floating Prompt Input Node
-  - Custom ReactFlow node with integrated prompt input functionality
-  - Positioned on the right side of the project flow
-  - Features gradient styling with purple-to-pink theme
-  - Includes loading states and keyboard shortcuts (Cmd+Enter)
-  - Draggable and interactive within the flow canvas
-- **NEW**: Authenticated Navbar Component
-  - Clean, responsive navbar for authenticated users
-  - Left side: App Icon, Projects, Usage, Settings navigation items
-  - Right side: User avatar and sign out button
-  - Mobile-responsive with hamburger menu
-  - Uses existing resizable navbar components for consistency
-  - Follows shadcn/ui design patterns and theme
-- **NEW**: Comprehensive Prompt Input Component with full feature set
-  - Beautiful, responsive prompt input form with character limit (500 chars)
-  - Real-time validation with visual feedback
-  - 6 example prompts for user guidance (clickable badges)
-  - Loading states during generation with spinner animation
-  - Auto-save draft functionality with 2-second debouncing
-  - Keyboard shortcuts (⌘+Enter to generate)
-  - Draft management (save/clear indicators)
-- Supabase Auth integration with login/signup pages
-- AuthProvider component for global authentication state management
-- Authentication callback and error handling pages
-- Resend confirmation email functionality
-- Enhanced error handling for expired OTP links
-- Switched from creations/edits per month to a credit-based system for Standard (200 credits/month) and Pro (500 credits/month) plans. All usage tracking and enforcement is now credit-based.
-- **NEW**: Polar.sh Integration (Simplified Approach)
-  - **Pure Polar Credits** system replaces database credit tracking ⭐ **RECOMMENDED**
-  - Migration 004 removes credit_usage table and utility functions
-  - Uses Polar's native Customer State API for credit checks
-  - Automatic credit granting when subscriptions renew
-  - Single source of truth for credits eliminates sync issues
-  - Created simplified generateUIComponent with Polar integration
-  - Comprehensive setup guide (docs/polar-setup.md) with implementation examples
+- **Landing Page**: Complete redesign with proper branding, hero section, and feature showcase
+- **Feature Grid**: Updated with actual app features (Mobile-First Design, AI-Powered Generation, Complete HTML & CSS, Lightning Fast, Project Management)
+- **Navigation**: Fixed navbar component API usage and improved mobile menu functionality
+- **Imports**: Cleaned up unused imports throughout the codebase for better maintainability
 
 ### Fixed
-- **Storage Bucket Access**: Fixed "Bucket not found" error when accessing HTML files
-  - Changed from `getPublicUrl()` to `createSignedUrl()` for private html-files bucket
-  - Switched to service role client for signed URL generation (better permissions)
-  - Enhanced error logging with detailed error information
-  - Added graceful fallback to prevent UI breaking when signed URL creation fails
-  - Fixed 404 errors when viewing generated screens in project flow
-- **Authentication Callback**: Fixed OAuth/PKCE flow handling in auth callback route
-  - Added support for both OAuth/PKCE flow (code parameter) and magic link flow (token/type parameters)
-  - Resolved redirect error handling that was causing successful authentications to show error pages
-  - Cleaned up debugging code for production
+- **Navbar**: Fixed component API usage for `NavItems`, `MobileNav`, `MobileNavToggle`, and `MobileNavMenu`
+- **Linter Errors**: Resolved TypeScript linter errors related to component props and imports
+- **Component Structure**: Improved component organization and removed redundant code
 
-### Changed
-- **BREAKING**: Integrated dashboard functionality directly into home page
-- Removed separate `/dashboard` route
-- Home page now shows different content based on authentication status:
-  - Landing page for non-authenticated users
-  - Dashboard for authenticated users
-- Added loading state while checking authentication
-- **SECURITY**: Replaced API route with Server Action for UI generation
-  - Migrated from `/api/generate` route to server action for better security
-  - Added input validation (prompt length limits)
-  - Improved error handling and TypeScript integration
-  - No longer exposed as public endpoint - built-in CSRF protection
-- **IMPROVED**: Redesigned dashboard with professional SaaS-like interface
-  - Replaced basic account info display with modern stats cards
-  - Added project overview with recent activity feed
-  - Implemented proper design system using globals.css theme
-  - Used shadcn/ui components for consistent styling
-  - Added quick action cards for better user experience
-- Replaced dropdown theme menu with a single toggle button in ModeToggle component for simpler light/dark switching. (2024-06-09)
+### Security
+- **Debug Information**: Removed debug console.log statements that could potentially expose sensitive information
 
-### Technical
-- **NEW**: Added essential UI components following shadcn/ui patterns
-  - Textarea component with variants and proper styling
-  - Card component with header, content, and footer sections
-  - Badge component for interactive elements
-- Created Supabase client configuration for both server and client
-- Implemented middleware for authentication protection
-- Added comprehensive error handling for auth flows
-- Used shadcn/ui components for consistent UI
-- Maintained server-side rendering where possible
-- Fixed Next.js 15 build error by wrapping useSearchParams in Suspense boundary
-- **REFACTORED**: Code cleanup and optimization
-  - Removed unused `getProjectHtmlUrl` function
-  - Renamed `getProjectHtmlUrl.ts` to `getProjectScreens.ts` for better clarity
-  - Removed unused edge-related functionality from ReactFlow (addEdge, Connection, useEdgesState)
-  - Cleaned up imports and reduced bundle size
-  - Simplified ProjectFlow component by removing unnecessary edge handling
+## Previous Entries
 
-## [Previous Versions]
-- Initial project setup with Next.js 14
-- Basic UI components and theme configuration
-- Project structure and routing setup
+### [1.0.0] - 2024-01-01
+- Initial release with core AI screen generation functionality
+- Polar.sh integration for subscription management
+- Supabase authentication and database integration
