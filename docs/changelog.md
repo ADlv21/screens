@@ -35,6 +35,13 @@
   - Updated migration documentation to reflect current state
 
 ### Changed
+- **Authentication Flow**: Removed automatic free plan subscription during signup
+  - Users are no longer automatically subscribed to the free plan upon registration
+  - All users must now explicitly visit the pricing page to choose and subscribe to any plan
+  - Simplified auth callback route by removing subscription logic and helper functions
+  - Removed `subscribeToFreePlan` and `subscribeUserToFreePlan` functions from polar-subscription.ts
+  - Deleted unused `signup-complete` API route that was only used for automatic subscriptions
+  - This ensures intentional plan selection and better conversion tracking
 - **Pricing Page**: Fixed dynamic pricing data parsing and display issues
   - Corrected API data parsing to show actual prices ($0, $29, $39) instead of all $0
   - Fixed credit allocation logic for Free plan (10 credits) vs paid plans (200/500)

@@ -1,7 +1,6 @@
 'use server';
 
 import { Polar } from '@polar-sh/sdk';
-import { createClient } from '@/lib/supabase/server';
 
 const polar = new Polar({
     accessToken: process.env.POLAR_ACCESS_TOKEN_SANDBOX,
@@ -26,78 +25,6 @@ export interface PolarSubscriptionResult {
     customerId?: string;
     subscriptionId?: string;
     error?: string;
-}
-
-/**
- * Create customer and subscribe to Free Plan
- */
-export async function subscribeToFreePlan(
-    userId: string,
-    email: string,
-    name?: string
-): Promise<{ success: boolean; customerId?: string; error?: string }> {
-    try {
-        // Create or get customer
-        let customer;
-        try {
-            customer = await polar.customers.getExternal({ externalId: userId });
-        } catch {
-            // Customer doesn't exist, create one
-            customer = await polar.customers.create({
-                email,
-                externalId: userId,
-                name: name || email.split('@')[0],
-            });
-        }
-
-        return {
-            success: true,
-            customerId: customer.id,
-        };
-
-    } catch (error) {
-        console.error('Failed to create or get customer:', error);
-        return {
-            success: false,
-            error: error instanceof Error ? error.message : 'Failed to subscribe to free plan'
-        };
-    }
-}
-
-/**
- * Subscribe user to Free Plan automatically
- */
-export async function subscribeUserToFreePlan(
-    userId: string,
-    email: string,
-    name?: string
-): Promise<{ success: boolean; customerId?: string; error?: string }> {
-    try {
-        // Create or get customer
-        let customer;
-        try {
-            customer = await polar.customers.getExternal({ externalId: userId });
-        } catch {
-            // Customer doesn't exist, create one
-            customer = await polar.customers.create({
-                email,
-                externalId: userId,
-                name: name || email.split('@')[0],
-            });
-        }
-
-        return {
-            success: true,
-            customerId: customer.id,
-        };
-
-    } catch (error) {
-        console.error('Failed to subscribe to free plan:', error);
-        return {
-            success: false,
-            error: error instanceof Error ? error.message : 'Failed to subscribe to free plan'
-        };
-    }
 }
 
 /**
