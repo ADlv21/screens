@@ -112,7 +112,7 @@
     status text not null, -- 'active', 'cancelled', 'past_due'
     start_date timestamp with time zone default now(),
     end_date timestamp with time zone,
-    dodo_payment_id text, -- reference to Dodo Payments
+    polar_subscription_id text, -- reference to Polar subscription
     created_at timestamp with time zone default now()
   );
 
@@ -182,19 +182,18 @@
   - [ ] Add user preferences and settings
 
 ### 5. Payment Integration
-- [ ] **Dodo Payments Setup**
-  - [ ] Research Dodo Payments API documentation
-  - [ ] Set up merchant account and API keys
-  - [ ] Create payment plans and pricing tiers
-  - [ ] Implement webhook handling for payment events
+- [x] **Polar.sh Payments Setup** ✅ **COMPLETED**
+  - [x] Set up Polar.sh organization and API keys  
+  - [x] Create Standard ($29/month, 200 credits) and Pro ($39/month, 500 credits) plans
+  - [x] Implement webhook handling for payment events
+  - [x] Create checkout and customer portal API routes
 
-- [ ] **Subscription Management**
-  - [ ] Implement Free/Standard/Pro plan limits (1 credit for Free, 200 credits for Standard, 500 credits for Pro)
-  - [ ] Track monthly credit usage and reset counters
-  - [ ] Handle yearly billing with $5 discount
-  - [ ] Add usage tracking and limits enforcement (credit-based)
-  - [ ] Create upgrade/downgrade flow
-  - [ ] Handle subscription cancellations and renewals
+- [x] **Subscription Management** ✅ **COMPLETED**
+  - [x] Implement credit-based system using Polar's native credit benefits
+  - [x] Credit checking before UI generation
+  - [x] Automatic credit deduction after successful generation
+  - [x] Upgrade flow integration with checkout API
+  - [x] Customer portal for subscription management
 
 ## 🔧 Technical Implementation
 
@@ -283,10 +282,9 @@ SUPABASE_SERVICE_ROLE_KEY=
 OPENAI_API_KEY=
 ANTHROPIC_API_KEY=
 
-# Dodo Payments
-DODO_MERCHANT_ID=
-DODO_API_KEY=
-DODO_WEBHOOK_SECRET=
+# Polar.sh Payments
+POLAR_ACCESS_TOKEN_SANDBOX=
+POLAR_WEBHOOK_SECRET_SANDBOX=
 ```
 
 ## ✅ **Confirmed Requirements**

@@ -7,6 +7,8 @@ import { useAuth } from '@/components/auth/auth-provider'
 import { generateUIComponent } from '@/lib/actions/generate-ui'
 import { AuthenticatedNavbar } from '@/components/authenticated-navbar'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Crown } from 'lucide-react'
 
 interface Project {
     id: string
@@ -21,6 +23,7 @@ const Dashboard = () => {
     const [projects, setProjects] = useState<Project[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
+    const [upgradeUrl, setUpgradeUrl] = useState<string | null>(null)
     const { user } = useAuth()
     const router = useRouter()
 
@@ -53,6 +56,7 @@ const Dashboard = () => {
     const handlePromptSubmit = async (prompt: string) => {
         setIsGenerating(true)
         setError(null)
+        setUpgradeUrl(null)
         try {
             const result = await generateUIComponent(prompt)
 
@@ -63,6 +67,7 @@ const Dashboard = () => {
                 }
             } else {
                 setError(result.error || 'Failed to generate UI')
+                setUpgradeUrl(result.upgradeUrl || null)
             }
         } catch (error) {
             console.error('Error generating UI:', error)
@@ -82,11 +87,32 @@ const Dashboard = () => {
                             onSubmit={handlePromptSubmit}
                             isLoading={isGenerating}
                         />
+
+                        {/* Error Display with Upgrade Option */}
+                        {error && (
+                            <Card className="border-destructive">
+                                <CardContent className="pt-6">
+                                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                        <div className="text-destructive">{error}</div>
+                                        {upgradeUrl && (
+                                            <Button
+                                                onClick={() => window.location.href = upgradeUrl}
+                                                className="flex items-center gap-1"
+                                            >
+                                                <Crown className="h-4 w-4" />
+                                                Upgrade Now
+                                            </Button>
+                                        )}
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        )}
+
                         <div className="mt-8">
                             <h2 className="text-2xl font-bold mb-4">Your Projects</h2>
                         </div>
                         {loading && <div>Loading projects...</div>}
-                        {error && <div className="text-red-500">{error}</div>}
+                        {error && !upgradeUrl && <div className="text-red-500">{error}</div>}
                         {!loading && !error && projects.length === 0 && (
                             <div className="text-muted-foreground">No projects found. Start by generating one!</div>
                         )}

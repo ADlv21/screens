@@ -3,48 +3,24 @@
 import { getAiModel } from '@/lib/ai';
 import { generateObject, jsonSchema } from 'ai';
 import { createClient, getCurrentUser } from '@/lib/supabase/server';
+import { uploadWithServiceRole } from '@/lib/supabase/service';
 import { uniqueNamesGenerator, adjectives, colors, animals } from 'unique-names-generator';
 import { redirect } from 'next/navigation';
+import { Polar } from '@polar-sh/sdk';
+import { systemPrompt } from '@/config/constants';
+import { getUserSubscriptionStatus, deductCredits } from './polar-subscription';
 
-const systemPrompt = `
-You are an expert mobile UI designer and developer. Generate complete, standalone mobile UI components using HTML with Tailwind CSS classes. Always provide the full HTML structure including proper DOCTYPE, html, head, and body tags. Include Tailwind CSS CDN link in the head. Focus on mobile-first design, accessibility, and modern UI patterns. Make sure the component is fully functional and self-contained.
-If you are going to use Images make sure that you include only unspalsh images you know for sure exists and fit them according to the screen size. Provide atleast 200 lines of code.
-Mobile Frontend Design
-Mobile-first approach
-Optimizing for touch interactions and mobile-native patterns focusing entirely on mobile user experience.
-Provide standalone HTML Pages, use tailwind css
-Mobile-First Design Features
-Navigation
-Bottom tab navigation - Native mobile pattern for easy thumb navigation
-Sticky mobile headers with essential actions only
-Touch-friendly buttons with proper sizing (44px minimum)
-Layout & Spacing
-Full-width cards optimized for mobile screens
-Vertical stacking instead of grid layouts
-Mobile-optimized spacing (16px, 24px system)
-Single-column layouts throughout
-Interactions
-Large touch targets for buttons and interactive elements
-Swipe-friendly horizontal scrolling for categories
-Mobile gestures support with proper touch feedback
-Thumb-zone optimization for primary actions
-Content Organization
-Condensed information suitable for small screens
-Progressive disclosure with expandable sections
-Mobile-friendly typography with proper line heights
-Compact cards showing essential info first
-Mobile-Specific Patterns
-Pull-to-refresh ready structure
-Infinite scroll for destination lists
-Mobile search with full-width input
-Bottom sheet style modals (ready for implementation)
-Native-feeling animations and transitions
-`;
+const polar = new Polar({
+    accessToken: process.env.POLAR_ACCESS_TOKEN_SANDBOX,
+    server: 'sandbox',
+});
 
 type GenerateUIResult = {
     success: boolean;
     projectId?: string;
     error?: string;
+    creditsRemaining?: number;
+    upgradeUrl?: string;
 };
 
 export async function generateUIComponent(prompt: string, projectId?: string): Promise<GenerateUIResult> {
@@ -66,6 +42,29 @@ export async function generateUIComponent(prompt: string, projectId?: string): P
 
         const userId = user.id;
         const supabase = await createClient();
+
+        // Check credits via Polar subscription service
+        const subscriptionStatus = await getUserSubscriptionStatus(userId);
+        const creditsLeft = subscriptionStatus.credits;
+
+        if (creditsLeft <= 0) {
+            // Generate appropriate upgrade URL based on current plan
+            let upgradeUrl = `/pricing`;
+
+            if (subscriptionStatus.plan === 'free') {
+                upgradeUrl = `/api/checkout?product_id=410368fd-96de-4dfb-9640-a9ada2eac149`; // Standard Plan
+            } else if (subscriptionStatus.plan === 'standard') {
+                upgradeUrl = `/api/checkout?product_id=3dfaf594-130c-45ac-a39e-0070ebe26124`; // Pro Plan
+            }
+
+            return {
+                success: false,
+                error: `Insufficient credits. You have ${creditsLeft} credits remaining.`,
+                creditsRemaining: creditsLeft,
+                upgradeUrl
+            };
+        }
+
         let finalProjectId = projectId;
 
         // If no projectId provided, create a new project
@@ -94,6 +93,19 @@ export async function generateUIComponent(prompt: string, projectId?: string): P
             if (projectError) {
                 console.error('Project creation error:', projectError);
                 return { success: false, error: 'Failed to create project' };
+            }
+
+            // Verify project was created successfully before proceeding
+            const { data: createdProject, error: verifyError } = await supabase
+                .from('projects')
+                .select('id, user_id')
+                .eq('id', finalProjectId)
+                .eq('user_id', userId)
+                .single();
+
+            if (verifyError || !createdProject) {
+                console.error('Project verification error:', verifyError);
+                return { success: false, error: 'Failed to verify project creation' };
             }
         } else {
             // Verify project exists and user has access
@@ -170,21 +182,21 @@ export async function generateUIComponent(prompt: string, projectId?: string): P
 
         const nextOrderIndex = lastScreen ? lastScreen.order_index + 1 : 0;
 
-        // Store HTML in Supabase Storage
+        // Store HTML in Supabase Storage using service role (bypasses RLS)
         const screenId = crypto.randomUUID();
         const versionId = crypto.randomUUID();
         const htmlFilePath = `projects/${finalProjectId}/screens/${screenId}/v1/index.html`;
         const htmlContent = llmResult.component.html;
 
-        const { error: storageError } = await supabase.storage
-            .from('html-files')
-            .upload(htmlFilePath, htmlContent, {
-                contentType: 'text/html',
-                upsert: true,
-            });
+        const uploadResult = await uploadWithServiceRole(
+            'html-files',
+            htmlFilePath,
+            htmlContent,
+            'text/html'
+        );
 
-        if (storageError) {
-            console.error('Storage error:', storageError);
+        if (!uploadResult.success) {
+            console.error('Storage error:', uploadResult.error);
             return { success: false, error: 'Failed to upload HTML' };
         }
 
@@ -222,13 +234,25 @@ export async function generateUIComponent(prompt: string, projectId?: string): P
             return { success: false, error: 'Failed to create screen version' };
         }
 
-        return { success: true, projectId: finalProjectId };
+        // Deduct credits after successful generation
+        const deductionResult = await deductCredits(userId, 1);
+        if (!deductionResult.success) {
+            console.error('Failed to deduct credits:', deductionResult.error);
+        }
+
+        const updatedCreditsLeft = deductionResult.newBalance;
+
+        return {
+            success: true,
+            projectId: finalProjectId,
+            creditsRemaining: updatedCreditsLeft,
+        };
 
     } catch (error) {
         console.error('Generate UI error:', error);
         return {
             success: false,
-            error: error instanceof Error ? error.message : 'Unknown error occurred'
+            error: error instanceof Error ? error.message : 'An unexpected error occurred',
         };
     }
 }

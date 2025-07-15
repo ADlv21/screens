@@ -39,7 +39,7 @@ const AuthenticatedNavbar = ({ children }: { children: React.ReactNode }) => {
                         {/* Avatar */}
                         <div className="flex items-center gap-3">
                             <Image
-                                src="https://avatar.iran.liara.run/public/boy"
+                                src="https://img.freepik.com/premium-vector/picture-boy-with-blue-shirt-that-says-hes-character_1230457-36809.jpg"
                                 alt="User Avatar"
                                 className="h-8 w-8 rounded-full border-2 border-border"
                                 width={32}
@@ -95,7 +95,7 @@ const AuthenticatedNavbar = ({ children }: { children: React.ReactNode }) => {
                         <div className="flex w-full flex-col gap-4 pt-4 border-t border-border">
                             <div className="flex items-center gap-3">
                                 <Image
-                                    src="https://avatar.iran.liara.run/public/boy"
+                                    src="https://img.freepik.com/premium-vector/picture-boy-with-blue-shirt-that-says-hes-character_1230457-36809.jpg"
                                     alt="User Avatar"
                                     className="h-8 w-8 rounded-full border-2 border-border"
                                 />

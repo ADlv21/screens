@@ -31,10 +31,9 @@ SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 # AI Providers
 OPENAI_API_KEY=your_openai_api_key
 
-# Dodo Payments
-DODO_MERCHANT_ID=your_dodo_merchant_id
-DODO_API_KEY=your_dodo_api_key
-DODO_WEBHOOK_SECRET=your_dodo_webhook_secret
+# Polar.sh Payments (Sandbox)
+POLAR_ACCESS_TOKEN_SANDBOX=your_polar_access_token
+POLAR_WEBHOOK_SECRET_SANDBOX=your_polar_webhook_secret
 ```
 
 ## Step 3: Supabase Dashboard Configuration
