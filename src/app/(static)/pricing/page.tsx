@@ -1,12 +1,91 @@
+"use server"
 import { Instrument_Serif } from 'next/font/google';
 import { cn } from '@/lib/utils';
+import { getPolarPricingPlans } from '@/lib/actions/get-polar-pricing';
+import Link from 'next/link';
 
 const serif = Instrument_Serif({
     subsets: ['latin'],
     weight: '400',
 });
 
-const PricingPage = () => {
+const PricingPage = async () => {
+
+    const polarResponse = await getPolarPricingPlans();
+
+    const plans = polarResponse.result.items.map((plan) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const price = plan.prices[0] as any;
+        return {
+            id: plan.id,
+            name: plan.name,
+            description: plan.description,
+            price: price?.priceAmount || 0,
+            currency: price?.priceCurrency || 'usd',
+            recurringInterval: plan.recurringInterval
+        }
+    });
+
+    // Sort plans by price (Free, Standard, Pro)
+    const sortedPlans = plans.sort((a, b) => a.price - b.price);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const getPlanConfig = (plan: any) => {
+        const priceDisplay = plan.price === 0 ? '$0' : `$${plan.price / 100}`;
+
+        if (plan.price === 0) {
+            // Free Plan
+            return {
+                displayName: 'Free',
+                title: 'Explore & Learn',
+                subtitle: 'Perfect for trying out our AI screen generation',
+                badge: { text: 'Get Started', color: 'green' },
+                features: [
+                    { text: '<strong>Limited Access</strong> - Basic features to explore' },
+                    { text: '<strong>Community Support</strong> - Help docs and forums' },
+                    { text: '<strong>Basic Templates</strong> - Standard UI components' }
+                ],
+                buttons: { primary: 'Start Free', secondary: 'Learn More' },
+                pricing: { amount: priceDisplay, period: '/month', note: 'Free forever • No credit card required' },
+                style: 'default'
+            };
+        } else if (plan.price === 2900) {
+            // Standard Plan  
+            return {
+                displayName: 'Standard',
+                title: 'Perfect for Most Users',
+                subtitle: 'Generate beautiful screens with plenty of credits',
+                badge: null,
+                features: [
+                    { text: '<strong>200 Credits</strong> - Generate 200 screens monthly' },
+                    { text: '<strong>All Templates</strong> - Access to premium designs' },
+                    { text: '<strong>Export Options</strong> - HTML, React, Vue components' },
+                    { text: '<strong>Email Support</strong> - Response within 24 hours' }
+                ],
+                buttons: { primary: 'Get Standard', secondary: 'Try Free First' },
+                pricing: { amount: priceDisplay, period: '/month', note: '200 credits monthly • Cancel anytime' },
+                style: 'featured'
+            };
+        } else {
+            // Pro Plan
+            return {
+                displayName: 'Pro',
+                title: 'For Heavy Usage',
+                subtitle: 'Maximum credits for teams and power users',
+                badge: { text: 'Power User', color: 'purple' },
+                features: [
+                    { text: '<strong>500 Credits</strong> - Generate 500 screens monthly' },
+                    { text: '<strong>Priority Generation</strong> - Faster processing' },
+                    { text: '<strong>Advanced Features</strong> - Custom styling options' },
+                    { text: '<strong>Priority Support</strong> - Direct chat support' }
+                ],
+                buttons: { primary: 'Get Pro', secondary: 'Start with Standard' },
+                pricing: { amount: priceDisplay, period: '/month', note: '500 credits monthly • Best value' },
+                style: 'default'
+            };
+        }
+    };
+
     return (
         <div className="w-full relative min-h-full bg-white text-black font-sans antialiased">
             <section className="relative max-w-7xl sm:px-6 lg:px-8 sm:py-12 mr-auto ml-auto pt-16 pr-4 pb-16 pl-4">
@@ -21,178 +100,126 @@ const PricingPage = () => {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
-                    {/* Free Plan */}
-                    <article className="relative hover:border-red-500 transition-all duration-300 lg:p-10 flex flex-col bg-white border-neutral-200 border-2 rounded-3xl pt-8 pr-8 pb-8 pl-8">
-                        <div className="flex justify-between items-start mb-8">
-                            <div className="flex items-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-red-500"><path d="M12 2L2 7v10c0 5.55 3.84 10 9 10s9-4.45 9-10V7L12 2z"></path></svg>
-                                <span className="text-sm font-semibold uppercase tracking-wide text-neutral-500">Free</span>
-                            </div>
-                            <span className="text-xs font-medium uppercase bg-green-50 border border-green-200 rounded-full px-3 py-1 text-green-600">
-                                Get Started
-                            </span>
-                        </div>
+                    {sortedPlans.map((plan, index) => {
+                        const config = getPlanConfig(plan);
+                        const isFeatured = config.style === 'featured';
 
-                        <div className="mb-8">
-                            <h2 className="lg:text-2xl leading-tight text-2xl font-medium mb-3">Explore & Learn</h2>
-                            <p className="text-neutral-600 text-sm">
-                                Perfect for trying out our AI screen generation
-                            </p>
-                        </div>
+                        return (
+                            <article
+                                key={plan.id}
+                                className={cn(
+                                    "relative transition-all duration-300 flex flex-col border-2 rounded-3xl pt-8 pr-8 pb-8 pl-8",
+                                    isFeatured
+                                        ? "bg-black text-white border-black scale-105 lg:scale-110 z-10 lg:p-10"
+                                        : "bg-white border-neutral-200 hover:border-red-500 lg:p-10"
+                                )}
+                            >
+                                {isFeatured && (
+                                    <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                                        <div className="bg-red-500 text-white text-xs font-bold uppercase px-4 py-2 rounded-full">
+                                            Most Popular
+                                        </div>
+                                    </div>
+                                )}
 
-                        <div className="mb-8">
-                            <div className="flex items-end gap-2 mb-2">
-                                <span className="text-4xl lg:text-5xl font-bold tracking-tight">$0</span>
-                                <span className="text-neutral-500 mb-1">/month</span>
-                            </div>
-                            <p className="text-xs text-neutral-500">Free forever • No credit card required</p>
-                        </div>
+                                <div className={cn("flex justify-between items-start mb-8", isFeatured && "mt-4")}>
+                                    <div className="flex items-center gap-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-red-500">
+                                            <path d="M12 2L2 7v10c0 5.55 3.84 10 9 10s9-4.45 9-10V7L12 2z"></path>
+                                        </svg>
+                                        <span className={cn(
+                                            "text-sm font-semibold uppercase tracking-wide",
+                                            isFeatured ? "text-neutral-400" : "text-neutral-500"
+                                        )}>
+                                            {config.displayName}
+                                        </span>
+                                    </div>
+                                    {config.badge && (
+                                        <span className={cn(
+                                            "text-xs font-medium uppercase border rounded-full px-3 py-1",
+                                            config.badge.color === 'green'
+                                                ? "bg-green-50 border-green-200 text-green-600"
+                                                : "bg-purple-50 border-purple-200 text-purple-600"
+                                        )}>
+                                            {config.badge.text}
+                                        </span>
+                                    )}
+                                </div>
 
-                        <div className="flex flex-col gap-3 mb-8">
-                            <button className="w-full rounded-full bg-red-500 text-white px-6 py-3 text-sm font-semibold hover:bg-red-600 transition-all duration-200">
-                                Start Free
-                            </button>
-                            <button className="w-full rounded-full border-2 border-neutral-300 text-neutral-700 px-6 py-3 text-sm font-medium hover:bg-neutral-50 transition-all duration-200">
-                                Learn More
-                            </button>
-                        </div>
+                                <div className="mb-8">
+                                    <h2 className="lg:text-2xl leading-tight text-2xl font-medium mb-3">{config.title}</h2>
+                                    <p className={cn(
+                                        "text-sm",
+                                        isFeatured ? "text-neutral-300" : "text-neutral-600"
+                                    )}>
+                                        {config.subtitle}
+                                    </p>
+                                </div>
 
-                        <hr className="border-neutral-200 mb-8" />
+                                <div className="mb-8">
+                                    <div className="flex items-end gap-2 mb-2">
+                                        <span className="text-4xl lg:text-5xl font-bold tracking-tight">{config.pricing.amount}</span>
+                                        <span className={cn(
+                                            "mb-1",
+                                            isFeatured ? "text-neutral-400" : "text-neutral-500"
+                                        )}>
+                                            {config.pricing.period}
+                                        </span>
+                                    </div>
+                                    <p className={cn(
+                                        "text-xs",
+                                        isFeatured ? "text-neutral-400" : "text-neutral-500"
+                                    )}>
+                                        {config.pricing.note}
+                                    </p>
+                                </div>
 
-                        <ul className="space-y-4 text-sm">
-                            <li className="flex items-start gap-3">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 mt-0.5 text-red-500 flex-shrink-0"><path d="M21.801 10A10 10 0 1 1 17 3.335"></path><path d="m9 11 3 3L22 4"></path></svg>
-                                <span><strong>Limited Access</strong> - Basic features to explore</span>
-                            </li>
-                            <li className="flex items-start gap-3">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 mt-0.5 text-red-500 flex-shrink-0"><path d="M21.801 10A10 10 0 1 1 17 3.335"></path><path d="m9 11 3 3L22 4"></path></svg>
-                                <span><strong>Community Support</strong> - Help docs and forums</span>
-                            </li>
-                            <li className="flex items-start gap-3">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 mt-0.5 text-red-500 flex-shrink-0"><path d="M21.801 10A10 10 0 1 1 17 3.335"></path><path d="m9 11 3 3L22 4"></path></svg>
-                                <span><strong>Basic Templates</strong> - Standard UI components</span>
-                            </li>
-                        </ul>
-                    </article>
+                                <div className="flex flex-col gap-3 mb-8">
+                                    <Link
+                                        className={cn(
+                                            "w-full rounded-full px-6 py-3 text-sm font-semibold transition-all duration-200",
+                                            isFeatured
+                                                ? "bg-white text-black hover:bg-neutral-100"
+                                                : config.displayName === 'Free'
+                                                    ? "bg-red-500 text-white hover:bg-red-600"
+                                                    : "bg-black text-white hover:bg-neutral-800"
+                                        )}
 
-                    {/* Standard Plan */}
-                    <article className="relative rounded-3xl bg-black text-white border-2 border-black transition-all duration-300 p-8 lg:p-10 flex flex-col scale-105 lg:scale-110 z-10">
-                        <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                            <div className="bg-red-500 text-white text-xs font-bold uppercase px-4 py-2 rounded-full">
-                                Most Popular
-                            </div>
-                        </div>
+                                        href={`/api/checkout?product_id=${plan.id}`}
+                                    >
+                                        {config.buttons.primary}
+                                    </Link>
+                                    <button className={cn(
+                                        "w-full rounded-full border-2 px-6 py-3 text-sm font-medium transition-all duration-200",
+                                        isFeatured
+                                            ? "border-white text-white hover:bg-white hover:text-black"
+                                            : config.displayName === 'Free'
+                                                ? "border-neutral-300 text-neutral-700 hover:bg-neutral-50"
+                                                : "border-black text-black hover:bg-black hover:text-white"
+                                    )}>
+                                        {config.buttons.secondary}
+                                    </button>
+                                </div>
 
-                        <div className="flex justify-between items-start mb-8 mt-4">
-                            <div className="flex items-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-red-500"><path d="M12 2L2 7v10c0 5.55 3.84 10 9 10s9-4.45 9-10V7L12 2z"></path></svg>
-                                <span className="text-sm font-semibold uppercase tracking-wide text-neutral-400">Standard</span>
-                            </div>
-                        </div>
+                                <hr className={cn(
+                                    "mb-8",
+                                    isFeatured ? "border-neutral-700" : "border-neutral-200"
+                                )} />
 
-                        <div className="mb-8">
-                            <h2 className="lg:text-2xl leading-tight text-2xl font-medium mb-3">Perfect for Most Users</h2>
-                            <p className="text-neutral-300 text-sm">
-                                Generate beautiful screens with plenty of credits
-                            </p>
-                        </div>
-
-                        <div className="mb-8">
-                            <div className="flex items-end gap-2 mb-2">
-                                <span className="text-4xl lg:text-5xl font-bold tracking-tight">$29</span>
-                                <span className="text-neutral-400 mb-1">/month</span>
-                            </div>
-                            <p className="text-xs text-neutral-400">200 credits monthly • Cancel anytime</p>
-                        </div>
-
-                        <div className="flex flex-col gap-3 mb-8">
-                            <button className="w-full rounded-full bg-white text-black px-6 py-3 text-sm font-semibold hover:bg-neutral-100 transition-all duration-200">
-                                Get Standard
-                            </button>
-                            <button className="w-full rounded-full border-2 border-white text-white px-6 py-3 text-sm font-medium hover:bg-white hover:text-black transition-all duration-200">
-                                Try Free First
-                            </button>
-                        </div>
-
-                        <hr className="border-neutral-700 mb-8" />
-
-                        <ul className="space-y-4 text-sm">
-                            <li className="flex items-start gap-3">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 mt-0.5 text-red-500 flex-shrink-0"><path d="M21.801 10A10 10 0 1 1 17 3.335"></path><path d="m9 11 3 3L22 4"></path></svg>
-                                <span><strong>200 Credits</strong> - Generate 200 screens monthly</span>
-                            </li>
-                            <li className="flex items-start gap-3">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 mt-0.5 text-red-500 flex-shrink-0"><path d="M21.801 10A10 10 0 1 1 17 3.335"></path><path d="m9 11 3 3L22 4"></path></svg>
-                                <span><strong>All Templates</strong> - Access to premium designs</span>
-                            </li>
-                            <li className="flex items-start gap-3">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 mt-0.5 text-red-500 flex-shrink-0"><path d="M21.801 10A10 10 0 1 1 17 3.335"></path><path d="m9 11 3 3L22 4"></path></svg>
-                                <span><strong>Export Options</strong> - HTML, React, Vue components</span>
-                            </li>
-                            <li className="flex items-start gap-3">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 mt-0.5 text-red-500 flex-shrink-0"><path d="M21.801 10A10 10 0 1 1 17 3.335"></path><path d="m9 11 3 3L22 4"></path></svg>
-                                <span><strong>Email Support</strong> - Response within 24 hours</span>
-                            </li>
-                        </ul>
-                    </article>
-
-                    {/* Pro Plan */}
-                    <article className="relative hover:border-red-500 transition-all duration-300 lg:p-10 flex flex-col bg-white border-neutral-200 border-2 rounded-3xl pt-8 pr-8 pb-8 pl-8">
-                        <div className="flex justify-between items-start mb-8">
-                            <div className="flex items-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-red-500"><path d="M12 2L2 7v10c0 5.55 3.84 10 9 10s9-4.45 9-10V7L12 2z"></path></svg>
-                                <span className="text-sm font-semibold uppercase tracking-wide text-neutral-500">Pro</span>
-                            </div>
-                            <span className="text-xs font-medium uppercase bg-purple-50 border border-purple-200 rounded-full px-3 py-1 text-purple-600">
-                                Power User
-                            </span>
-                        </div>
-
-                        <div className="mb-8">
-                            <h2 className="lg:text-2xl leading-tight text-2xl font-medium mb-3">For Heavy Usage</h2>
-                            <p className="text-neutral-600 text-sm">
-                                Maximum credits for teams and power users
-                            </p>
-                        </div>
-
-                        <div className="mb-8">
-                            <div className="flex items-end gap-2 mb-2">
-                                <span className="text-4xl lg:text-5xl font-bold tracking-tight">$39</span>
-                                <span className="text-neutral-500 mb-1">/month</span>
-                            </div>
-                            <p className="text-xs text-neutral-500">500 credits monthly • Best value</p>
-                        </div>
-
-                        <div className="flex flex-col gap-3 mb-8">
-                            <button className="w-full rounded-full bg-black text-white px-6 py-3 text-sm font-semibold hover:bg-neutral-800 transition-all duration-200">
-                                Get Pro
-                            </button>
-                            <button className="w-full rounded-full border-2 border-black text-black px-6 py-3 text-sm font-medium hover:bg-black hover:text-white transition-all duration-200">
-                                Start with Standard
-                            </button>
-                        </div>
-
-                        <hr className="border-neutral-200 mb-8" />
-
-                        <ul className="space-y-4 text-sm">
-                            <li className="flex items-start gap-3">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 mt-0.5 text-red-500 flex-shrink-0"><path d="M21.801 10A10 10 0 1 1 17 3.335"></path><path d="m9 11 3 3L22 4"></path></svg>
-                                <span><strong>500 Credits</strong> - Generate 500 screens monthly</span>
-                            </li>
-                            <li className="flex items-start gap-3">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 mt-0.5 text-red-500 flex-shrink-0"><path d="M21.801 10A10 10 0 1 1 17 3.335"></path><path d="m9 11 3 3L22 4"></path></svg>
-                                <span><strong>Priority Generation</strong> - Faster processing</span>
-                            </li>
-                            <li className="flex items-start gap-3">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 mt-0.5 text-red-500 flex-shrink-0"><path d="M21.801 10A10 10 0 1 1 17 3.335"></path><path d="m9 11 3 3L22 4"></path></svg>
-                                <span><strong>Advanced Features</strong> - Custom styling options</span>
-                            </li>
-                            <li className="flex items-start gap-3">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 mt-0.5 text-red-500 flex-shrink-0"><path d="M21.801 10A10 10 0 1 1 17 3.335"></path><path d="m9 11 3 3L22 4"></path></svg>
-                                <span><strong>Priority Support</strong> - Direct chat support</span>
-                            </li>
-                        </ul>
-                    </article>
+                                <ul className="space-y-4 text-sm">
+                                    {config.features.map((feature, featureIndex) => (
+                                        <li key={featureIndex} className="flex items-start gap-3">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 mt-0.5 text-red-500 flex-shrink-0">
+                                                <path d="M21.801 10A10 10 0 1 1 17 3.335"></path>
+                                                <path d="m9 11 3 3L22 4"></path>
+                                            </svg>
+                                            <span dangerouslySetInnerHTML={{ __html: feature.text }} />
+                                        </li>
+                                    ))}
+                                </ul>
+                            </article>
+                        );
+                    })}
                 </div>
 
                 <div className="mt-16 sm:mt-20 text-center">
