@@ -3,11 +3,12 @@
 import Script from 'next/script'
 import { CredentialResponse } from 'google-one-tap'
 import { useRouter } from 'next/navigation'
-import { useEffect, useCallback } from 'react'
+import { useCallback } from 'react'
 import { createClient } from '@/utils/supabase/client'
 
 declare global {
     interface Window {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         google: any
     }
 }
