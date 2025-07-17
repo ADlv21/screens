@@ -28,6 +28,7 @@
   - Enhanced error handling that doesn't block authentication flow
   - Added proper logging for subscription success/failure
   - Removed unused parameters and client-side complexity
+- Made the Generate New Screen (PromptInputNode) collapsible in ProjectFlow using shadcn/ui Accordion.
 
 ### Cleanup & Refactoring
 

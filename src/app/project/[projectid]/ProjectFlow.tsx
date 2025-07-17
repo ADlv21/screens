@@ -18,6 +18,7 @@ import { Button, buttonVariants } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Sparkles, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 
 interface MobileUIData {
     title: string;
@@ -204,32 +205,22 @@ const ProjectFlow = ({ screens, projectId }: { screens: ProjectScreen[]; project
 
             {/* Fixed PromptInputNode in top right corner */}
             <div className="fixed top-12 right-2 z-50">
-                <PromptInputNode
-                    data={{
-                        onSubmit: handleGenerateNewScreen,
-                        isLoading: isGenerating,
-                    }}
-                />
+                <Accordion type="single" collapsible defaultValue="prompt-input">
+                    <AccordionItem value="prompt-input">
+                        <AccordionTrigger>
+                            Generate New Screen
+                        </AccordionTrigger>
+                        <AccordionContent>
+                            <PromptInputNode
+                                data={{
+                                    onSubmit: handleGenerateNewScreen,
+                                    isLoading: isGenerating,
+                                }}
+                            />
+                        </AccordionContent>
+                    </AccordionItem>
+                </Accordion>
             </div>
-            {/* <footer className={`fixed bottom-0 w-full text-center text-sm z-50 py-2 px-4 transition-all duration-500 ${isGenerating
-                ? 'bg-gradient-to-t from-indigo-500 to-sky-500 animate-pulse'
-                : 'bg-gradient-to-t from-gray-500 to-gray-600'
-                }`}>
-                <p className={`text-white transition-all duration-300 ${isGenerating ? 'animate-bounce' : ''
-                    }`}>
-                    {isGenerating ? (
-                        <>
-                            <Sparkles className="w-3 h-3 inline mr-1 animate-spin" />
-                            Generating with <a href="https://www.ai-screens.com" className="text-white hover:text-blue-200 underline">AI Screens</a>
-                            <Sparkles className="w-3 h-3 inline ml-1 animate-spin" />
-                        </>
-                    ) : (
-                        <>
-                            Generated with <a href="https://www.ai-screens.com" className="text-white hover:text-blue-200 underline">AI Screens</a>
-                        </>
-                    )}
-                </p>
-            </footer> */}
         </div>
     );
 };

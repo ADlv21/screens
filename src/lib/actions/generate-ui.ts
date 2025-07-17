@@ -2,18 +2,13 @@
 
 import { getAiModel } from '@/lib/ai';
 import { generateObject, jsonSchema } from 'ai';
+import { GoogleGenerativeAIProviderOptions } from '@ai-sdk/google';
 import { createClient, getCurrentUser } from '@/lib/supabase/server';
 import { uploadWithServiceRole } from '@/lib/supabase/service';
 import { uniqueNamesGenerator, adjectives, colors, animals } from 'unique-names-generator';
 import { redirect } from 'next/navigation';
-import { Polar } from '@polar-sh/sdk';
 import { systemPrompt } from '@/config/constants';
 import { getUserSubscriptionStatus, deductCredits } from './polar-subscription';
-
-const polar = new Polar({
-    accessToken: process.env.POLAR_ACCESS_TOKEN_SANDBOX,
-    server: 'sandbox',
-});
 
 type GenerateUIResult = {
     success: boolean;
@@ -48,20 +43,11 @@ export async function generateUIComponent(prompt: string, projectId?: string): P
         const creditsLeft = subscriptionStatus.credits;
 
         if (creditsLeft <= 0) {
-            // Generate appropriate upgrade URL based on current plan
-            let upgradeUrl = `/pricing`;
-
-            if (subscriptionStatus.plan === 'free') {
-                upgradeUrl = `/api/checkout?product_id=410368fd-96de-4dfb-9640-a9ada2eac149`; // Standard Plan
-            } else if (subscriptionStatus.plan === 'standard') {
-                upgradeUrl = `/api/checkout?product_id=3dfaf594-130c-45ac-a39e-0070ebe26124`; // Pro Plan
-            }
-
             return {
                 success: false,
                 error: `Insufficient credits. You have ${creditsLeft} credits remaining.`,
                 creditsRemaining: creditsLeft,
-                upgradeUrl
+                upgradeUrl: "/pricing",
             };
         }
 
@@ -165,10 +151,20 @@ export async function generateUIComponent(prompt: string, projectId?: string): P
 
         // Generate UI with LLM
         const { object: llmResult } = await generateObject({
+            //model: getAiModel('google', 'gemini-2.5-flash'),
             model: getAiModel('openai', 'gpt-4o-mini'),
             system: systemPrompt,
             prompt: prompt,
-            schema: mobileUISchema
+            schema: mobileUISchema,
+            providerOptions: {
+                google: {
+                    thinkingConfig: {
+                        includeThoughts: true,
+                        //thinkingBudget: 2048,
+                    },
+                } satisfies GoogleGenerativeAIProviderOptions,
+            },
+            experimental_telemetry: { isEnabled: true },
         });
 
         // Get the next order index for the screen
