@@ -3,10 +3,12 @@ import { FeatureGrid } from "../feature-grid"
 import { Button } from "../ui/button"
 import { Sparkles, Smartphone, Zap } from "lucide-react"
 import Link from "next/link"
+import OneTapComponent from "../auth/google-one-tap"
 
 const LandingPage = () => {
     return (
         <AppNavbar>
+            <OneTapComponent />
             <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
                 <div className="container mx-auto px-4 py-16 pt-24">
                     {/* Hero Section */}
