@@ -7,8 +7,8 @@ import { createClient, getCurrentUser } from '@/lib/supabase/server';
 import { uploadWithServiceRole } from '@/lib/supabase/service';
 import { uniqueNamesGenerator, adjectives, colors, animals } from 'unique-names-generator';
 import { redirect } from 'next/navigation';
-import { systemPrompt } from '@/config/constants';
 import { getUserSubscriptionStatus, deductCredits } from './polar-subscription';
+import { Langfuse, TextPromptClient } from 'langfuse';
 
 type GenerateUIResult = {
     success: boolean;
@@ -17,6 +17,19 @@ type GenerateUIResult = {
     creditsRemaining?: number;
     upgradeUrl?: string;
 };
+
+const getLangfuseSystemPrompt = async (): Promise<{ prompt: string, fetchedPrompt: TextPromptClient }> => {
+    const langfuse = new Langfuse();
+    const prompt = await langfuse
+    .getPrompt("appdraft-system", undefined, {
+        label: "production",
+    })
+    .then((prompt) => {
+        return { prompt: prompt.prompt, fetchedPrompt: prompt};
+    });
+
+    return prompt;
+}
 
 export async function generateUIComponent(prompt: string, projectId?: string): Promise<GenerateUIResult> {
     try {
@@ -150,6 +163,8 @@ export async function generateUIComponent(prompt: string, projectId?: string): P
         });
 
         // Generate UI with LLM
+
+        const { prompt: systemPrompt, fetchedPrompt } = await getLangfuseSystemPrompt();
         const { object: llmResult } = await generateObject({
             //model: getAiModel('google', 'gemini-2.5-flash'),
             model: getAiModel('openai', 'gpt-4o-mini'),
@@ -164,7 +179,15 @@ export async function generateUIComponent(prompt: string, projectId?: string): P
                     },
                 } satisfies GoogleGenerativeAIProviderOptions,
             },
-            experimental_telemetry: { isEnabled: true },
+            experimental_telemetry: {
+                isEnabled: true,
+                metadata: {
+                    langfusePrompt: fetchedPrompt.toJSON(),
+                    userId: user.id,
+                    userEmail: user.email || "No email",
+                    projectId: finalProjectId || "No project id",
+                }
+            },
         });
 
         // Get the next order index for the screen
