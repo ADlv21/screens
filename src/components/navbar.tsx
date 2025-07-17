@@ -37,7 +37,7 @@ const AppNavbar = ({ children }: { children: React.ReactNode }) => {
 
     return (
         <div className="relative w-full">
-            <Navbar>
+            <Navbar className="pb-2">
                 {/* Desktop Navigation */}
                 <NavBody>
                     <NavbarLogo />
@@ -51,14 +51,7 @@ const AppNavbar = ({ children }: { children: React.ReactNode }) => {
                         >
                             Login
                         </NavbarButton>
-                        <NavbarButton
-                            variant="primary"
-                            onClick={() => {
-                                console.log("Book a call");
-                            }}>
-                            Book a call
-                        </NavbarButton>
-                        <NavbarButton variant="blank">
+                        <NavbarButton variant="dark" className="p-0">
                             <ModeToggle />
                         </NavbarButton>
                     </div>
