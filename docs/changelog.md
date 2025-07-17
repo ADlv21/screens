@@ -1,5 +1,52 @@
 # Changelog
 
+## [Latest] - 2024-12-XX
+
+### Added
+
+- **Codebase Analysis Completed**: Analyzed trigger and function usage across the entire project
+  - Found version numbering conflict between manual setting and auto-increment trigger
+  - Identified redundant `updated_at` manual setting vs triggers
+  - Confirmed essential functions: `handle_new_user()`, `ensure_single_current_version()`
+- **New Simplified Migration**: Created `simplified_complete_setup.sql` - conflict-free version
+  - ❌ **REMOVED**: `set_version_number()` trigger (conflicts with manual version_number: 1)
+  - ✅ **KEPT**: `update_updated_at_column()` triggers (useful for auto-timestamps)
+  - ✅ **KEPT**: `ensure_single_current_version()` trigger (maintains data consistency)
+  - ✅ **KEPT**: `handle_new_user()` trigger (essential for auth sync)
+- **User Sync Trigger Restored:** Added back the `handle_new_user` function and trigger to `simplified_complete_setup.sql`.
+  - Automatically syncs new users from `auth.users` to your `users` table on signup.
+
+### Technical Analysis Results
+
+- **Version Numbering**: Code manually sets `version_number: 1` in `generate-ui.ts:239`
+- **Timestamp Updates**: Code manually sets `updated_at` in webhooks but triggers can handle it
+- **Current Version Control**: Code sets `is_current: true` and trigger ensures only one current version
+- **User Creation**: Auth trigger successfully syncs `auth.users` with `users` table
+
+### Recommendations Applied
+
+- Use the simplified migration for new setups to avoid database conflicts
+- Consider removing manual `updated_at` setting to let triggers handle it automatically
+- Keep manual version numbering as is (works reliably)
+
+- **New Complete Setup Migration**: Created `complete_setup.sql` - single migration file for fresh Supabase projects
+  - Includes all tables: users, projects, screens, screen_versions, subscriptions, polar_config
+  - Storage bucket creation with 5MB limit and proper MIME types
+  - Complete RLS policies for security
+  - Performance indexes for optimal queries
+  - Utility functions and triggers for automation
+  - Auth integration with automatic user creation
+  - Polar.sh integration ready
+
+### Technical Details
+
+- Uses proper foreign key constraints with CASCADE deletes
+- Row Level Security (RLS) enabled on all tables
+- Storage policies restrict access to user's own project files
+- Automatic versioning for screen iterations
+- Timestamp triggers for audit trails
+- Credit system ready for Polar.sh integration
+
 ## [Unreleased]
 
 ### Added
@@ -73,12 +120,22 @@
 - **Imports**: Cleaned up unused imports throughout the codebase for better maintainability
 - Removed secondary buttons from pricing cards on the pricing page for a cleaner UI.
 - Removed all email/password signup and signin functionality. Now only Google login is supported via One Tap on the login page.
+- **Migration Simplified:** Removed all triggers and utility functions from `simplified_complete_setup.sql`.
+  - Now contains only tables, storage bucket, indexes, and RLS policies.
+  - No triggers or custom SQL functions are present.
+  - Minimal, clean setup for new projects.
 
 ### Fixed
 
 - **Navbar**: Fixed component API usage for `NavItems`, `MobileNav`, `MobileNavToggle`, and `MobileNavMenu`
 - **Linter Errors**: Resolved TypeScript linter errors related to component props and imports
 - **Component Structure**: Improved component organization and removed redundant code
+- **Security Issues Resolved**: Fixed mutable search_path warnings in database functions
+  - Added `SECURITY DEFINER SET search_path = public` to `update_updated_at_column()` function
+  - Added `SECURITY DEFINER SET search_path = public` to `ensure_single_current_version()` function
+  - Functions now follow PostgreSQL security best practices
+  - Prevents potential search_path hijacking attacks
+  - Applied fixes to both `complete_setup.sql` and `simplified_complete_setup.sql`
 
 ### Security
 

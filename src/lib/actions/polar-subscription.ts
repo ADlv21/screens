@@ -5,17 +5,17 @@ import polar from './get-polar';
 // Unified Plan Configuration (minimal)
 const PLAN_CONFIG = {
     free: {
-        productId: '9f296fe6-8435-4fcd-9ec7-2b17b648c23b',
+        productId: process.env.POLAR_FREE_PRODUCT_ID,
     },
     standard: {
-        productId: '410368fd-96de-4dfb-9640-a9ada2eac149',
+        productId: process.env.POLAR_STANDARD_PRODUCT_ID,
     },
     pro: {
-        productId: '3dfaf594-130c-45ac-a39e-0070ebe26124',
+        productId: process.env.POLAR_PRO_PRODUCT_ID,
     }
 } as const;
 
-const CREDIT_METER_ID = '46de6ba0-ae2b-46f2-955b-0f6b95ab3d96';
+const CREDIT_METER_ID = process.env.POLAR_CREDIT_METER_ID;
 
 export interface PolarSubscriptionResult {
     success: boolean;
