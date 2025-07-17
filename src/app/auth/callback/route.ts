@@ -55,6 +55,6 @@ export async function GET(request: NextRequest) {
         redirect(next)
     }
 
-    // If no token_hash or code, redirect to login
-    redirect('/auth/login')
+    // If no token_hash or code, redirect to home
+    redirect('/')
 } 

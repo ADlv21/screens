@@ -11,51 +11,14 @@ function AuthErrorContent() {
     const errorDescription = searchParams.get('error_description')
 
     const getErrorInfo = () => {
-        switch (error) {
-            case 'access_denied':
-                return {
-                    title: 'Access Denied',
-                    message: 'Your email confirmation link has expired or is invalid.',
-                    action: 'Please request a new confirmation email.',
-                    showResend: true
-                }
-            case 'otp_expired':
-                return {
-                    title: 'Link Expired',
-                    message: 'Your email confirmation link has expired.',
-                    action: 'Please request a new confirmation email.',
-                    showResend: true
-                }
-            case 'verification_failed':
-                return {
-                    title: 'Verification Failed',
-                    message: errorDescription || 'There was an error verifying your email.',
-                    action: 'Please try again or contact support.',
-                    showResend: false
-                }
-            case 'invalid_request':
-                return {
-                    title: 'Invalid Request',
-                    message: errorDescription || 'The authentication request was invalid.',
-                    action: 'Please try signing up again.',
-                    showResend: false
-                }
-            default:
-                return {
-                    title: 'Authentication Error',
-                    message: errorDescription || 'There was an error with your authentication.',
-                    action: 'Please try again.',
-                    showResend: false
-                }
+        return {
+            title: 'Authentication Error',
+            message: errorDescription || 'There was an error with your authentication. Please try again with Google login.',
+            action: 'Please try again.',
         }
     }
 
     const errorInfo = getErrorInfo()
-
-    const handleResendEmail = async () => {
-        // Redirect to resend confirmation page
-        window.location.href = '/auth/resend'
-    }
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -86,27 +49,6 @@ function AuthErrorContent() {
                         {errorInfo.action}
                     </p>
                 </div>
-
-                <div className="space-y-4">
-                    {errorInfo.showResend && (
-                        <Button
-                            onClick={handleResendEmail}
-                            className="w-full bg-indigo-600 hover:bg-indigo-700"
-                        >
-                            Request New Confirmation Email
-                        </Button>
-                    )}
-
-                    <div className="text-center">
-                        <Link
-                            href="/auth/login"
-                            className="text-indigo-600 hover:text-indigo-500 text-sm"
-                        >
-                            Return to login
-                        </Link>
-                    </div>
-                </div>
-
                 {error && (
                     <div className="mt-4 p-3 bg-gray-100 rounded-md">
                         <p className="text-xs text-gray-600">

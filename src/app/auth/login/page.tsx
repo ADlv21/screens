@@ -1,130 +1,55 @@
 'use client'
 
-import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
+import GoogleOneTap from '@/components/auth/google-one-tap'
 import { Button } from '@/components/ui/button'
-import Link from 'next/link'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/utils/supabase/client'
+import { useCallback } from 'react'
 
-export default function LoginPage() {
-    const [email, setEmail] = useState('')
-    const [password, setPassword] = useState('')
-    const [loading, setLoading] = useState(false)
-    const [error, setError] = useState<string | null>(null)
-    const [isSignUp, setIsSignUp] = useState(false)
+export default function GoogleLoginPage() {
     const router = useRouter()
-    const supabase = createClient()
-
-    const handleAuth = async (e: React.FormEvent) => {
-        e.preventDefault()
-        setLoading(true)
-        setError(null)
-
-        try {
-            if (isSignUp) {
-                const { error } = await supabase.auth.signUp({
-                    email,
-                    password,
-                    options: {
-                        emailRedirectTo: `${location.origin}/auth/callback`,
-                    },
-                })
-                if (error) throw error
-                alert('Check your email for the confirmation link!')
-            } else {
-                const { error } = await supabase.auth.signInWithPassword({
-                    email,
-                    password,
-                })
-                if (error) throw error
-                router.push('/')
-            }
-        } catch (error) {
-            setError(error instanceof Error ? error.message : 'An error occurred')
-        } finally {
-            setLoading(false)
+    const handleGoogleSignIn = useCallback(async () => {
+        const supabase = createClient()
+        const { data, error } = await supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+                redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : undefined,
+            },
+        })
+        if (error) {
+            // Optionally handle error
+            return
         }
-    }
+        // Supabase will redirect, but fallback just in case
+        if (data?.url) {
+            window.location.href = data.url
+        }
+    }, [router])
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-            <div className="max-w-md w-full space-y-8">
-                <div>
-                    <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                        {isSignUp ? 'Create your account' : 'Sign in to your account'}
-                    </h2>
-                </div>
-                <form className="mt-8 space-y-6" onSubmit={handleAuth}>
-                    <div className="rounded-md shadow-sm -space-y-px">
-                        <div>
-                            <label htmlFor="email" className="sr-only">
-                                Email address
-                            </label>
-                            <input
-                                id="email"
-                                name="email"
-                                type="email"
-                                autoComplete="email"
-                                required
-                                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                                placeholder="Email address"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                            />
-                        </div>
-                        <div>
-                            <label htmlFor="password" className="sr-only">
-                                Password
-                            </label>
-                            <input
-                                id="password"
-                                name="password"
-                                type="password"
-                                autoComplete="current-password"
-                                required
-                                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                                placeholder="Password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                            />
-                        </div>
-                    </div>
-
-                    {error && (
-                        <div className="text-red-600 text-sm text-center">{error}</div>
-                    )}
-
-                    <div>
-                        <Button
-                            type="submit"
-                            disabled={loading}
-                            className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
-                        >
-                            {loading ? 'Loading...' : isSignUp ? 'Sign up' : 'Sign in'}
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted to-background/80 py-12 px-4 sm:px-6 lg:px-8">
+            <div className="absolute inset-0 pointer-events-none select-none opacity-10 flex items-center justify-center">
+                {/* Optional: Add a subtle SVG or illustration here for background effect */}
+                <img src="/globe.svg" alt="Background Illustration" className="w-2/3 max-w-lg" />
+            </div>
+            <Card className="relative z-10 w-full max-w-md shadow-xl border-border border bg-card/90 backdrop-blur-md">
+                <CardHeader className="flex flex-col items-center">
+                    <img src="/file.svg" alt="Logo" className="h-12 w-12 mb-2" />
+                    <CardTitle className="text-2xl font-bold text-center text-foreground">Sign in to AIScreens</CardTitle>
+                    <CardDescription className="text-center text-muted-foreground mt-2">
+                        Use your Google account to sign in. No password required.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="flex flex-col items-center justify-center space-y-4 mt-2">
+                        <GoogleOneTap />
+                        <Button onClick={handleGoogleSignIn} className="w-full max-w-xs text-base font-medium">
+                            Continue with Google
                         </Button>
                     </div>
-
-                    <div className="text-center space-y-2">
-                        <button
-                            type="button"
-                            onClick={() => setIsSignUp(!isSignUp)}
-                            className="text-indigo-600 hover:text-indigo-500 text-sm block"
-                        >
-                            {isSignUp
-                                ? 'Already have an account? Sign in'
-                                : "Don't have an account? Sign up"}
-                        </button>
-                        {!isSignUp && (
-                            <Link
-                                href="/auth/resend"
-                                className="text-indigo-600 hover:text-indigo-500 text-sm block"
-                            >
-                                Need to resend confirmation email?
-                            </Link>
-                        )}
-                    </div>
-                </form>
-            </div>
+                </CardContent>
+            </Card>
         </div>
     )
 } 

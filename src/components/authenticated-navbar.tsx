@@ -26,7 +26,7 @@ const AuthenticatedNavbar = ({ children }: { children: React.ReactNode }) => {
         { name: "Settings", link: "/settings" },
     ];
 
-    const { signOut } = useAuth()
+    const { user, signOut } = useAuth()
 
     return (
         <div className="relative w-full">
@@ -39,7 +39,7 @@ const AuthenticatedNavbar = ({ children }: { children: React.ReactNode }) => {
                         {/* Avatar */}
                         <div className="flex items-center gap-3">
                             <Image
-                                src="https://img.freepik.com/premium-vector/picture-boy-with-blue-shirt-that-says-hes-character_1230457-36809.jpg"
+                                src={user?.user_metadata.avatar_url || "https://img.freepik.com/premium-vector/picture-boy-with-blue-shirt-that-says-hes-character_1230457-36809.jpg"}
                                 alt="User Avatar"
                                 className="h-8 w-8 rounded-full border-2 border-border"
                                 width={32}

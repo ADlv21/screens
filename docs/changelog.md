@@ -72,6 +72,7 @@
 - **Navigation**: Fixed navbar component API usage and improved mobile menu functionality
 - **Imports**: Cleaned up unused imports throughout the codebase for better maintainability
 - Removed secondary buttons from pricing cards on the pricing page for a cleaner UI.
+- Removed all email/password signup and signin functionality. Now only Google login is supported via One Tap on the login page.
 
 ### Fixed
 
