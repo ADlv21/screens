@@ -2,7 +2,7 @@ import { Webhooks } from '@polar-sh/nextjs';
 import { createClient } from '@/lib/supabase/server';
 
 export const POST = Webhooks({
-    webhookSecret: process.env.POLAR_WEBHOOK_SECRET_SANDBOX!,
+    webhookSecret: process.env.POLAR_WEBHOOK_SECRET!,
 
     // Catch-all handler for all webhook events
     onPayload: async (payload) => {

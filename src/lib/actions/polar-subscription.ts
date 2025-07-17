@@ -1,11 +1,6 @@
 'use server';
 
-import { Polar } from '@polar-sh/sdk';
-
-const polar = new Polar({
-    accessToken: process.env.POLAR_ACCESS_TOKEN_SANDBOX,
-    server: 'sandbox',
-});
+import polar from './get-polar';
 
 // Unified Plan Configuration (minimal)
 const PLAN_CONFIG = {

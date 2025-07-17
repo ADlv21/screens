@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Polar } from '@polar-sh/sdk';
 import { createClient } from '@/lib/supabase/server';
-
-const polar = new Polar({
-    accessToken: process.env.POLAR_ACCESS_TOKEN_SANDBOX,
-    server: 'sandbox',
-});
+import polar from '@/lib/actions/get-polar';
 
 export async function GET(request: NextRequest) {
     try {
