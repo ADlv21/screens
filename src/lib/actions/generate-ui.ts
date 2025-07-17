@@ -163,11 +163,9 @@ export async function generateUIComponent(prompt: string, projectId?: string): P
         });
 
         // Generate UI with LLM
-
         const { prompt: systemPrompt, fetchedPrompt } = await getLangfuseSystemPrompt();
         const { object: llmResult } = await generateObject({
-            //model: getAiModel('google', 'gemini-2.5-flash'),
-            model: getAiModel('openai', 'gpt-4o-mini'),
+            model: getAiModel('google', 'gemini-2.5-flash'),
             system: systemPrompt,
             prompt: prompt,
             schema: mobileUISchema,
