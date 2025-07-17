@@ -7,18 +7,20 @@ const polar = new Polar({
     server: 'sandbox',
 });
 
-// Free Plan Configuration
-const FREE_PLAN_CONFIG = {
-    planName: 'free',
-    creditAmount: 10,
-    meterId: '46de6ba0-ae2b-46f2-955b-0f6b95ab3d96'
-};
+// Unified Plan Configuration (minimal)
+const PLAN_CONFIG = {
+    free: {
+        productId: '9f296fe6-8435-4fcd-9ec7-2b17b648c23b',
+    },
+    standard: {
+        productId: '410368fd-96de-4dfb-9640-a9ada2eac149',
+    },
+    pro: {
+        productId: '3dfaf594-130c-45ac-a39e-0070ebe26124',
+    }
+} as const;
 
-// Product IDs
-const PRODUCT_IDS = {
-    STANDARD: '410368fd-96de-4dfb-9640-a9ada2eac149',
-    PRO: '3dfaf594-130c-45ac-a39e-0070ebe26124'
-};
+const CREDIT_METER_ID = '46de6ba0-ae2b-46f2-955b-0f6b95ab3d96';
 
 export interface PolarSubscriptionResult {
     success: boolean;
@@ -42,18 +44,20 @@ export async function getUserSubscriptionStatus(userId: string): Promise<{
 
         // Find the credit meter
         const creditMeter = state.activeMeters?.find(
-            (meter) => meter.meterId === FREE_PLAN_CONFIG.meterId
+            (meter) => meter.meterId === CREDIT_METER_ID
         );
 
         const credits = creditMeter?.balance || 0;
 
         // Determine plan based on active subscriptions
-        let plan = 'free';
+        let plan = 'You have no active subscription';
         if (state.activeSubscriptions && state.activeSubscriptions.length > 0) {
             const subscription = state.activeSubscriptions[0];
-            if (subscription.productId === PRODUCT_IDS.STANDARD) {
+            if (subscription.productId === PLAN_CONFIG.free.productId) { 
+                plan = 'free';
+            } else if (subscription.productId === PLAN_CONFIG.standard.productId) {
                 plan = 'standard';
-            } else if (subscription.productId === PRODUCT_IDS.PRO) {
+            } else if (subscription.productId === PLAN_CONFIG.pro.productId) {
                 plan = 'pro';
             }
         }
@@ -91,7 +95,7 @@ export async function deductCredits(userId: string, amount: number = 1): Promise
                 metadata: {
                     user_id: userId,
                     event_type: 'screen_generation',
-                    meter_id: '46de6ba0-ae2b-46f2-955b-0f6b95ab3d96',
+                    meter_id: CREDIT_METER_ID,
                     amount: 1
                 }
             }));
@@ -110,7 +114,7 @@ export async function deductCredits(userId: string, amount: number = 1): Promise
         // Get updated customer state to return new balance
         const updatedState = await polar.customers.getState({ id: customer.id });
         const creditMeter = updatedState.activeMeters?.find(
-            (meter) => meter.meterId === '46de6ba0-ae2b-46f2-955b-0f6b95ab3d96'
+            (meter) => meter.meterId === CREDIT_METER_ID
         );
 
         const newBalance = creditMeter?.balance || 0;

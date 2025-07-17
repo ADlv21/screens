@@ -189,16 +189,6 @@ const PricingPage = async () => {
                                     >
                                         {config.buttons.primary}
                                     </Link>
-                                    <button className={cn(
-                                        "w-full rounded-full border-2 px-6 py-3 text-sm font-medium transition-all duration-200",
-                                        isFeatured
-                                            ? "border-white text-white hover:bg-white hover:text-black"
-                                            : config.displayName === 'Free'
-                                                ? "border-neutral-300 text-neutral-700 hover:bg-neutral-50"
-                                                : "border-black text-black hover:bg-black hover:text-white"
-                                    )}>
-                                        {config.buttons.secondary}
-                                    </button>
                                 </div>
 
                                 <hr className={cn(

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import { useAuth } from '@/components/auth/auth-provider'
 import { AuthenticatedNavbar } from '@/components/authenticated-navbar'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
@@ -83,7 +83,7 @@ const SettingsPage = () => {
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2">
                                         <Zap className="h-5 w-5 text-primary" />
-                                        <CardTitle className="text-lg">Subscription & Credits</CardTitle>
+                                        <CardTitle className="text-lg">Credits</CardTitle>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         {!loading && creditsRemaining !== null && (
@@ -110,15 +110,6 @@ const SettingsPage = () => {
                                         </p>
                                     </div>
                                     <div className="flex gap-2">
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => window.location.href = '/api/customer-portal'}
-                                            className="flex items-center gap-1"
-                                        >
-                                            <CreditCard className="h-4 w-4" />
-                                            Manage Subscription
-                                        </Button>
                                         {!loading && creditsRemaining === 0 && (
                                             <Button
                                                 size="sm"
