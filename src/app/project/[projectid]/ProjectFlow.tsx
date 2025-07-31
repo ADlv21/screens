@@ -176,7 +176,7 @@ const ProjectFlow = ({ screens, projectId }: { screens: ProjectScreen[]; project
         <div className="w-full h-screen bg-gray-50 relative">
             <div className='bg-gray-950 w-full h-10 flex items-center justify-between px-4'>
                 <div className='text-white text-lg font-bold'>
-                    <Link href="/">AI Screens</Link>
+                    <Link href="/">AppDraft</Link>
                 </div>
                 <div className='text-white text-lg font-bold'>
                     <Link className={`${buttonVariants({ variant: 'outline' })}`} href="/profile">

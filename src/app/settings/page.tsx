@@ -102,7 +102,7 @@ const SettingsPage = () => {
                                             {loading
                                                 ? "Loading subscription status..."
                                                 : creditsRemaining === null
-                                                    ? "Subscribe to start generating AI screens"
+                                                    ? "Subscribe to start generating AppDraft AI"
                                                     : creditsRemaining > 0
                                                         ? `You have ${creditsRemaining} screen generations remaining this month.`
                                                         : "You've used all your credits this month. Upgrade to continue generating screens."

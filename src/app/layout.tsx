@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AI Screens",
+  title: "AppDraft",
   description: "Generate mobile UI screens with AI",
 };
 

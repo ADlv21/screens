@@ -43,7 +43,7 @@ const LandingPage = () => {
                     {/* Features Section */}
                     <div className="mb-16">
                         <h2 className="text-3xl font-bold text-center mb-12 text-gray-800 dark:text-white">
-                            Why Choose AI Screens?
+                            Why Choose AppDraft AI?
                         </h2>
                         <FeatureGrid />
                     </div>
@@ -70,7 +70,7 @@ const LandingPage = () => {
                             Ready to Create Amazing Mobile UIs?
                         </h3>
                         <p className="text-gray-600 dark:text-gray-300 mb-6">
-                            Join thousands of developers already using AI Screens to build beautiful mobile interfaces.
+                            Join thousands of developers already using AppDraft AI to build beautiful mobile interfaces.
                         </p>
                         <Link href="/auth/login">
                             <Button size="lg" className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
