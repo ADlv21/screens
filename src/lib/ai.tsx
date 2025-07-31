@@ -16,7 +16,7 @@ export const getAiModel = <P extends Provider>(provider: P, model: ModelMap[P]):
             googleAuthOptions: {
                 credentials: {
                     client_email: process.env.GOOGLE_API_EMAIL,
-                    private_key: process.env.GOOGLE_API_KEY
+                    private_key: process.env.GOOGLE_API_KEY?.split(String.raw`\n`).join('\n'),
                 },
             },
         });
