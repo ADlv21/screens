@@ -85,11 +85,11 @@ export async function deductCredits(userId: string, amount: number = 1): Promise
             const usageEvents = Array.from({ length: amount }, (_, i) => ({
                 id: crypto.randomUUID(),
                 created_at: new Date().toISOString(),
-                name: 'screen_generation',
+                name: 'credits',
                 externalCustomerId: userId,
                 metadata: {
                     user_id: userId,
-                    event_type: 'screen_generation',
+                    event_type: 'credits',
                     meter_id: CREDIT_METER_ID,
                     amount: 1
                 }
