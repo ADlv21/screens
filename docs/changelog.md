@@ -141,6 +141,8 @@
 
 - **Debug Information**: Removed debug console.log statements that could potentially expose sensitive information
 
+- Major redesign of landing page: modern hero with gradient, spotlight, badge, illustration, improved feature grid, stats, testimonial, FAQ, and strong CTA. Uses shadcn/ui components and follows theme from globals.css.
+
 ## Previous Entries
 
 ### [1.0.0] - 2024-01-01
