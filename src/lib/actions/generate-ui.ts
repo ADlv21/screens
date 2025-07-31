@@ -33,29 +33,39 @@ const getLangfuseSystemPrompt = async (): Promise<{ prompt: string, fetchedPromp
 
 export async function generateUIComponent(prompt: string, projectId?: string): Promise<GenerateUIResult> {
     try {
+        console.log('[generateUIComponent] Start', { prompt, projectId });
         // Input validation
         if (!prompt || prompt.trim().length === 0) {
+            console.log('[generateUIComponent] No prompt provided');
             return { success: false, error: 'Prompt is required' };
         }
 
         if (prompt.length > 1000) {
+            console.log('[generateUIComponent] Prompt too long', { length: prompt.length });
             return { success: false, error: 'Prompt is too long (max 1000 characters)' };
         }
 
         // Get authenticated user
+        console.log('[generateUIComponent] Getting current user');
         const user = await getCurrentUser();
         if (!user) {
+            console.log('[generateUIComponent] User not authenticated');
             return { success: false, error: 'Not authenticated' };
         }
 
         const userId = user.id;
+        console.log('[generateUIComponent] User authenticated', { userId });
         const supabase = await createClient();
+        console.log('[generateUIComponent] Supabase client created');
 
         // Check credits via Polar subscription service
+        console.log('[generateUIComponent] Checking user credits');
         const subscriptionStatus = await getUserSubscriptionStatus(userId);
         const creditsLeft = subscriptionStatus.credits;
+        console.log('[generateUIComponent] User credits', { creditsLeft });
 
         if (creditsLeft <= 0) {
+            console.log('[generateUIComponent] Insufficient credits', { creditsLeft });
             return {
                 success: false,
                 error: `Insufficient credits. You have ${creditsLeft} credits remaining.`,
@@ -68,6 +78,7 @@ export async function generateUIComponent(prompt: string, projectId?: string): P
 
         // If no projectId provided, create a new project
         if (!projectId) {
+            console.log('[generateUIComponent] No projectId provided, creating new project');
             // Generate unique project name
             const projectName = uniqueNamesGenerator({
                 dictionaries: [adjectives, colors, animals],
@@ -75,9 +86,11 @@ export async function generateUIComponent(prompt: string, projectId?: string): P
                 length: 3,
                 style: 'lowerCase',
             });
+            console.log('[generateUIComponent] Generated project name', { projectName });
 
             // Create project
             finalProjectId = crypto.randomUUID();
+            console.log('[generateUIComponent] Generated project UUID', { finalProjectId });
 
             const { error: projectError } = await supabase.from('projects').insert([
                 {
@@ -88,9 +101,10 @@ export async function generateUIComponent(prompt: string, projectId?: string): P
                     prompt: prompt,
                 }
             ]);
+            console.log('[generateUIComponent] Inserted project', { finalProjectId, projectError });
 
             if (projectError) {
-                console.error('Project creation error:', projectError);
+                console.error('[generateUIComponent] Project creation error:', projectError);
                 return { success: false, error: 'Failed to create project' };
             }
 
@@ -101,21 +115,25 @@ export async function generateUIComponent(prompt: string, projectId?: string): P
                 .eq('id', finalProjectId)
                 .eq('user_id', userId)
                 .single();
+            console.log('[generateUIComponent] Verified project creation', { createdProject, verifyError });
 
             if (verifyError || !createdProject) {
-                console.error('Project verification error:', verifyError);
+                console.error('[generateUIComponent] Project verification error:', verifyError);
                 return { success: false, error: 'Failed to verify project creation' };
             }
         } else {
             // Verify project exists and user has access
+            console.log('[generateUIComponent] projectId provided, verifying access', { projectId });
             const { data: project, error: projectError } = await supabase
                 .from('projects')
                 .select('id')
                 .eq('id', projectId)
                 .eq('user_id', userId)
                 .single();
+            console.log('[generateUIComponent] Project access check', { project, projectError });
 
             if (projectError || !project) {
+                console.log('[generateUIComponent] Project not found or access denied', { projectId });
                 return { success: false, error: 'Project not found or access denied' };
             }
 
@@ -124,13 +142,15 @@ export async function generateUIComponent(prompt: string, projectId?: string): P
                 .from('projects')
                 .update({ updated_at: new Date().toISOString() })
                 .eq('id', projectId);
+            console.log('[generateUIComponent] Updated project timestamp', { updateError });
 
             if (updateError) {
-                console.error('Project update error:', updateError);
+                console.error('[generateUIComponent] Project update error:', updateError);
             }
         }
 
         // Define schema for LLM response
+        console.log('[generateUIComponent] Defining LLM schema');
         const mobileUISchema = jsonSchema<{
             component: {
                 name: string;
@@ -161,9 +181,13 @@ export async function generateUIComponent(prompt: string, projectId?: string): P
             },
             required: ['component']
         });
+        console.log('[generateUIComponent] LLM schema defined');
 
         // Generate UI with LLM
+        console.log('[generateUIComponent] Fetching system prompt from Langfuse');
         const { prompt: systemPrompt, fetchedPrompt } = await getLangfuseSystemPrompt();
+        console.log('[generateUIComponent] System prompt fetched', { systemPrompt });
+        console.log('[generateUIComponent] Calling generateObject for LLM UI generation');
         const { object: llmResult } = await generateObject({
             model: getAiModel('google', 'gemini-2.5-flash'),
             system: systemPrompt,
@@ -187,8 +211,10 @@ export async function generateUIComponent(prompt: string, projectId?: string): P
                 }
             },
         });
+        console.log('[generateUIComponent] LLM result received', { llmResult });
 
         // Get the next order index for the screen
+        console.log('[generateUIComponent] Fetching last screen order index');
         const { data: lastScreen, error: orderError } = await supabase
             .from('screens')
             .select('order_index')
@@ -196,14 +222,17 @@ export async function generateUIComponent(prompt: string, projectId?: string): P
             .order('order_index', { ascending: false })
             .limit(1)
             .single();
+        console.log('[generateUIComponent] Last screen order index', { lastScreen, orderError });
 
         const nextOrderIndex = lastScreen ? lastScreen.order_index + 1 : 0;
+        console.log('[generateUIComponent] Next order index', { nextOrderIndex });
 
         // Store HTML in Supabase Storage using service role (bypasses RLS)
         const screenId = crypto.randomUUID();
         const versionId = crypto.randomUUID();
         const htmlFilePath = `projects/${finalProjectId}/screens/${screenId}/v1/index.html`;
         const htmlContent = llmResult.component.html;
+        console.log('[generateUIComponent] Preparing to upload HTML', { htmlFilePath });
 
         const uploadResult = await uploadWithServiceRole(
             'html-files',
@@ -211,13 +240,15 @@ export async function generateUIComponent(prompt: string, projectId?: string): P
             htmlContent,
             'text/html'
         );
+        console.log('[generateUIComponent] HTML upload result', { uploadResult });
 
         if (!uploadResult.success) {
-            console.error('Storage error:', uploadResult.error);
+            console.error('[generateUIComponent] Storage error:', uploadResult.error);
             return { success: false, error: 'Failed to upload HTML' };
         }
 
         // Create screen record
+        console.log('[generateUIComponent] Inserting screen record', { screenId, finalProjectId, name: llmResult.component.name, nextOrderIndex });
         const { error: screenError } = await supabase.from('screens').insert([
             {
                 id: screenId,
@@ -226,13 +257,15 @@ export async function generateUIComponent(prompt: string, projectId?: string): P
                 order_index: nextOrderIndex,
             }
         ]);
+        console.log('[generateUIComponent] Screen insert result', { screenError });
 
         if (screenError) {
-            console.error('Screen creation error:', screenError);
+            console.error('[generateUIComponent] Screen creation error:', screenError);
             return { success: false, error: 'Failed to create screen' };
         }
 
         // Create screen version record
+        console.log('[generateUIComponent] Inserting screen version record', { versionId, screenId, htmlFilePath });
         const { error: versionError } = await supabase.from('screen_versions').insert([
             {
                 id: versionId,
@@ -245,19 +278,23 @@ export async function generateUIComponent(prompt: string, projectId?: string): P
                 is_current: true,
             }
         ]);
+        console.log('[generateUIComponent] Screen version insert result', { versionError });
 
         if (versionError) {
-            console.error('Version creation error:', versionError);
+            console.error('[generateUIComponent] Version creation error:', versionError);
             return { success: false, error: 'Failed to create screen version' };
         }
 
         // Deduct credits after successful generation
+        console.log('[generateUIComponent] Deducting credits for user', { userId });
         const deductionResult = await deductCredits(userId, 1);
+        console.log('[generateUIComponent] Credit deduction result', { deductionResult });
         if (!deductionResult.success) {
-            console.error('Failed to deduct credits:', deductionResult.error);
+            console.error('[generateUIComponent] Failed to deduct credits:', deductionResult.error);
         }
 
         const updatedCreditsLeft = deductionResult.newBalance;
+        console.log('[generateUIComponent] Returning success', { finalProjectId, updatedCreditsLeft });
 
         return {
             success: true,
@@ -266,7 +303,7 @@ export async function generateUIComponent(prompt: string, projectId?: string): P
         };
 
     } catch (error) {
-        console.error('Generate UI error:', error);
+        console.error('[generateUIComponent] Generate UI error:', error);
         return {
             success: false,
             error: error instanceof Error ? error.message : 'An unexpected error occurred',

@@ -76,6 +76,7 @@
   - Added proper logging for subscription success/failure
   - Removed unused parameters and client-side complexity
 - Made the Generate New Screen (PromptInputNode) collapsible in ProjectFlow using shadcn/ui Accordion.
+- Added detailed console.log statements to every major step and branch in `generateUIComponent` (src/lib/actions/generate-ui.ts) for improved traceability and debugging.
 
 ### Cleanup & Refactoring
 
