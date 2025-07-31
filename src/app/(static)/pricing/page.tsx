@@ -38,7 +38,7 @@ const PricingPage = async () => {
             return {
                 displayName: 'Free',
                 title: 'Explore & Learn',
-                subtitle: 'Perfect for trying out our AI screen generation',
+                subtitle: 'Perfect for trying out our AppDraft AI generation',
                 badge: { text: 'Get Started', color: 'green' },
                 features: [
                     { text: '<strong>Limited Access</strong> - Basic features to explore' },
@@ -91,7 +91,7 @@ const PricingPage = async () => {
             <section className="relative max-w-7xl sm:px-6 lg:px-8 sm:py-12 mr-auto ml-auto pt-16 pr-4 pb-16 pl-4">
                 <div className="text-center mb-16 sm:mb-20">
                     <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight tracking-tight mb-6">
-                        <span className={cn("text-7xl font-normal text-red-500 tracking-tight", serif.className)}>AI Screen</span><br />
+                        <span className={cn("text-7xl font-normal text-red-500 tracking-tight", serif.className)}>App Draft</span><br />
                         <span className={cn("text-8xl font-normal text-black tracking-tight", serif.className)}>Generation</span>
                     </h1>
                     <p className="sm:text-lg max-w-3xl text-base text-neutral-600 mr-auto ml-auto">
