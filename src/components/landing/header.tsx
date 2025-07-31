@@ -1,7 +1,8 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import { Menu, X } from "lucide-react"
+import Link from "next/link"
 import { useState } from "react"
 
 export function Header() {
@@ -36,12 +37,16 @@ export function Header() {
                     </nav>
 
                     <div className="hidden md:flex items-center space-x-4">
-                        <Button variant="ghost" className="text-slate-300 hover:text-white">
+                        <Link
+                            href='/auth/login'
+                            className={`${buttonVariants({ variant: "ghost" })} text-slate-300 hover:text-white`}>
                             Sign In
-                        </Button>
-                        <Button className="bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 text-white">
+                        </Link>
+                        <Link
+                            href='/auth/login'
+                            className={`${buttonVariants({ variant: "ghost" })} bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 text-white`}>
                             Start Creating - Free
-                        </Button>
+                        </Link>
                     </div>
 
                     <button className="md:hidden" onClick={() => setIsMenuOpen(!isMenuOpen)}>
@@ -76,6 +81,6 @@ export function Header() {
                     </div>
                 )}
             </div>
-        </header>
+        </header >
     )
 }
