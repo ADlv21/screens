@@ -77,6 +77,9 @@
   - Removed unused parameters and client-side complexity
 - Made the Generate New Screen (PromptInputNode) collapsible in ProjectFlow using shadcn/ui Accordion.
 - Added detailed console.log statements to every major step and branch in `generateUIComponent` (src/lib/actions/generate-ui.ts) for improved traceability and debugging.
+- Added real framer-motion entrance animations to all major sections for smooth, accessible transitions.
+- Improved accessibility: added aria-labels, descriptive alt text, keyboard focus states for all interactive elements.
+- Optimized all images/SVGs for performance and accessibility.
 
 ### Cleanup & Refactoring
 
@@ -142,7 +145,15 @@
 
 - **Debug Information**: Removed debug console.log statements that could potentially expose sensitive information
 
-- Major redesign of landing page: modern hero with gradient, spotlight, badge, illustration, improved feature grid, stats, testimonial, FAQ, and strong CTA. Uses shadcn/ui components and follows theme from globals.css.
+## [Unreleased] - Landing Page Revamp
+
+- Refactored hero section: added animated subheading, social proof logos, and a UI mockup illustration.
+- Made primary CTA more prominent and added demo/pricing CTAs.
+- Moved testimonial section below hero for better social proof.
+- Enhanced features section with shadcn/ui Cards and icons.
+- Added 'Still have questions?' CTA to FAQ.
+- Added subtle entrance animations and improved button/link states.
+- Improved mobile responsiveness and accessibility.
 
 ## Previous Entries
 
