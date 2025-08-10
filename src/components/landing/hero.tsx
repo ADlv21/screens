@@ -71,9 +71,9 @@ export function Hero() {
                                     <Image
                                         src={fitnessApp}
                                         alt="Generated mobile UI"
-                                        width={96}
-                                        height={160}
-                                        className="w-24 h-40 mx-auto rounded-lg bg-slate-700"
+                                        width={500}
+                                        height={500}
+                                        className="w-[320px] h-[480px] mx-auto rounded-lg bg-slate-700"
                                     />
                                 </div>
                                 <div className="text-slate-400 text-sm">Beautiful UI in 30 seconds</div>

@@ -11,6 +11,7 @@ import Image from "next/image";
 
 import React, { useRef, useState } from "react";
 
+import logo from "@/../public/images/AppDraft-icon.png"
 
 interface NavbarProps {
     children: React.ReactNode;
@@ -238,7 +239,7 @@ export const NavbarLogo = () => {
             className="relative z-20 mr-4 flex items-center space-x-2 px-2 py-1 text-sm font-normal text-black"
         >
             <Image
-                src="https://assets.aceternity.com/logo-dark.png"
+                src={logo}
                 alt="logo"
                 width={30}
                 height={30}

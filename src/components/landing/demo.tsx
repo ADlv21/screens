@@ -3,32 +3,33 @@ import { Button } from "@/components/ui/button"
 import { ArrowRight } from "lucide-react"
 import Image from "next/image"
 import fitnessApp from "@/../public/images/fitness.png"
+import weatherApp from "@/../public/images/weather-app.png"
 
 const demoCategories = [
     {
         name: "E-commerce",
         description: "Product listings, shopping carts, checkout flows",
-        image: "/placeholder.svg?height=300&width=180",
+        image: "/placeholder.svg",
     },
     {
         name: "Social",
         description: "Feeds, profiles, messaging, social interactions",
-        image: "/placeholder.svg?height=300&width=180",
+        image: "/placeholder.svg",
     },
     {
-        name: "Productivity",
-        description: "Task management, calendars, note-taking apps",
-        image: "/placeholder.svg?height=300&width=180",
+        name: "Weather App",
+        description: "App with current weather, forecast, and location search",
+        image: weatherApp,
     },
     {
         name: "Finance",
         description: "Banking, budgeting, investment tracking",
-        image: "/placeholder.svg?height=300&width=180",
+        image: "/placeholder.svg",
     },
     {
         name: "Health & Fitness",
         description: "Workout tracking, nutrition, wellness apps",
-        image: "/placeholder.svg?height=300&width=180",
+        image: "/placeholder.svg",
     },
 ]
 
@@ -100,10 +101,11 @@ export function Demo() {
                             >
                                 <div className="mb-4">
                                     <Image
-                                        //src={category.image || "/placeholder.svg"}
-                                        src={fitnessApp}
+                                        src={category.image || "/placeholder.svg"}
+                                        width={100}
+                                        height={100}
                                         alt={`${category.name} app example`}
-                                        className="w-20 h-32 mx-auto rounded-lg bg-slate-800 border border-slate-700"
+                                        className="w-20 h-40 mx-auto rounded-lg bg-slate-800 border border-slate-700"
                                     />
                                 </div>
                                 <h4 className="font-semibold text-white mb-2 group-hover:text-slate-100">{category.name}</h4>
